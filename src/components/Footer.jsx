@@ -10,9 +10,9 @@ export default function Footer() {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">EC</span>
+                <span className="text-white font-bold">م</span>
               </div>
-              <span className="text-lg font-bold text-white">EComm</span>
+              <span className="text-lg font-bold text-white">متجري</span>
             </div>
             <p className="text-sm text-gray-400">
               منصة تجارة إلكترونية آمنة وموثوقة لربط البائعين بالمشترين
