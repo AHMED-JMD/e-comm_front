@@ -1,14 +1,49 @@
 import { Link } from "react-router-dom";
-import { FiArrowRight, FiTrendingUp, FiShield, FiZap } from "react-icons/fi";
+import {
+  FiArrowRight,
+  FiShield,
+  FiZap,
+  FiStar,
+  FiSmartphone,
+  FiShoppingBag,
+  FiBox,
+  FiBook,
+  FiActivity,
+  FiSun,
+} from "react-icons/fi";
 import { useState } from "react";
 
 const CATEGORIES = [
-  { id: 1, name: "إلكترونيات", icon: "📱", count: 124 },
-  { id: 2, name: "الملابس", icon: "👕", count: 89 },
-  { id: 3, name: "الأثاث", icon: "🪑", count: 45 },
-  { id: 4, name: "الكتب", icon: "📚", count: 67 },
-  { id: 5, name: "الرياضة", icon: "⚽", count: 52 },
-  { id: 6, name: "الجمال", icon: "💄", count: 38 },
+  {
+    id: 1,
+    name: "إلكترونيات",
+    icon: FiSmartphone,
+    color: "text-blue-600",
+    count: 124,
+  },
+  {
+    id: 2,
+    name: "الملابس",
+    icon: FiShoppingBag,
+    color: "text-purple-600",
+    count: 89,
+  },
+  { id: 3, name: "الأثاث", icon: FiBox, color: "text-orange-600", count: 45 },
+  { id: 4, name: "الكتب", icon: FiBook, color: "text-green-600", count: 67 },
+  {
+    id: 5,
+    name: "الرياضة",
+    icon: FiActivity,
+    color: "text-red-600",
+    count: 52,
+  },
+  {
+    id: 6,
+    name: "الجمال",
+    icon: FiSun,
+    color: "text-pink-600",
+    count: 38,
+  },
 ];
 
 const FEATURED_PRODUCTS = [
@@ -128,21 +163,27 @@ export default function Home() {
           <h2 className="section-title">لماذا اختيار منصتنا؟</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="card text-center">
-              <div className="text-5xl mb-4">🔒</div>
+              <div className="text-5xl mb-4">
+                <FiShield size={50} className="mx-auto text-blue-600" />
+              </div>
               <h3 className="text-xl font-bold mb-3">آمن وموثوق</h3>
               <p className="text-gray-600">
                 معاملات آمنة مع حماية كاملة للبيانات الشخصية والمالية
               </p>
             </div>
             <div className="card text-center">
-              <div className="text-5xl mb-4">⭐</div>
+              <div className="text-5xl mb-4">
+                <FiStar size={50} className="mx-auto text-yellow-500" />
+              </div>
               <h3 className="text-xl font-bold mb-3">تقييمات وثقة</h3>
               <p className="text-gray-600">
                 نظام تقييم شفاف يساعدك على اختيار البائعين الموثوقين
               </p>
             </div>
             <div className="card text-center">
-              <div className="text-5xl mb-4">⚡</div>
+              <div className="text-5xl mb-4">
+                <FiZap size={50} className="mx-auto text-green-600" />
+              </div>
               <h3 className="text-xl font-bold mb-3">سريع وسهل</h3>
               <p className="text-gray-600">
                 واجهة بسيطة وسهلة الاستخدام للبيع والشراء بسرعة
@@ -157,18 +198,25 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <h2 className="section-title">الفئات الرئيسية</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {CATEGORIES.map((category) => (
-              <div
-                key={category.id}
-                className="card text-center hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
-              >
-                <div className="text-4xl mb-3">{category.icon}</div>
-                <h3 className="font-bold text-gray-900 mb-2">
-                  {category.name}
-                </h3>
-                <p className="text-sm text-gray-500">{category.count} منتج</p>
-              </div>
-            ))}
+            {CATEGORIES.map((category) => {
+              const IconComponent = category.icon;
+              return (
+                <div
+                  key={category.id}
+                  className="card text-center hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
+                >
+                  <div
+                    className={`text-4xl mb-3 flex justify-center ${category.color}`}
+                  >
+                    <IconComponent size={40} />
+                  </div>
+                  <h3 className="font-bold text-gray-900 mb-2">
+                    {category.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">{category.count} منتج</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
