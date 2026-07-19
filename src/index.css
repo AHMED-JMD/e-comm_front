@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  direction: rtl;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Droid Arabic Kufi",
+    sans-serif;
+}
+
+body {
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Droid Arabic Kufi",
+    sans-serif;
+  @apply bg-white text-gray-900;
+  direction: rtl;
+  text-align: right;
+}
+
+/* Custom utility classes */
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium shadow-md hover:shadow-lg;
+  }
+
+  .btn-outline {
+    @apply px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-200 font-medium;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+  }
+
+  .section-title {
+    @apply text-3xl font-bold text-gray-900 mb-12 text-center;
+  }
+
+  /* RTL specific classes */
+  .rtl {
+    direction: rtl;
+    text-align: right;
+  }
+
+  .flex-rtl {
+    @apply flex flex-row-reverse;
+  }
+
+  .space-rtl > * + * {
+    margin-right: 1rem;
+    margin-left: 0;
+  }
+}
