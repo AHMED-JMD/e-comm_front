@@ -12,6 +12,8 @@ import {
   FiSun,
 } from "react-icons/fi";
 import { useState } from "react";
+import { PRODUCTS } from "../data/products";
+import { useCart } from "../context/CartContext";
 
 const CATEGORIES = [
   {
@@ -46,64 +48,10 @@ const CATEGORIES = [
   },
 ];
 
-const FEATURED_PRODUCTS = [
-  {
-    id: 1,
-    name: "هاتف ذكي",
-    price: 2500,
-    store: "متجري",
-    rating: 4.8,
-    image: "📱",
-    status: "جديد",
-  },
-  {
-    id: 2,
-    name: "لابتوب",
-    price: 8000,
-    store: "تك ستور",
-    rating: 4.5,
-    image: "💻",
-    status: "جديد",
-  },
-  {
-    id: 3,
-    name: "سماعات",
-    price: 500,
-    store: "صوت مصر",
-    rating: 4.9,
-    image: "🎧",
-    status: "جديد",
-  },
-  {
-    id: 4,
-    name: "كاميرا",
-    price: 3500,
-    store: "فوتوغرافيا",
-    rating: 4.7,
-    image: "📷",
-    status: "مستعمل",
-  },
-  {
-    id: 5,
-    name: "ساعة ذكية",
-    price: 1200,
-    store: "الوقت",
-    rating: 4.6,
-    image: "⌚",
-    status: "جديد",
-  },
-  {
-    id: 6,
-    name: "جهاز لوحي",
-    price: 3000,
-    store: "الأجهزة",
-    rating: 4.8,
-    image: "📲",
-    status: "جديد",
-  },
-];
+const FEATURED_PRODUCTS = PRODUCTS.slice(0, 6);
 
 export default function Home() {
+  const { addToCart } = useCart();
   const [filteredProducts, setFilteredProducts] = useState(FEATURED_PRODUCTS);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -114,7 +62,7 @@ export default function Home() {
     } else {
       setFilteredProducts(
         FEATURED_PRODUCTS.filter(
-          (p) => p.name.includes(term) || p.store.includes(term),
+          (p) => p.name.includes(term) || p.storeName.includes(term),
         ),
       );
     }
@@ -261,7 +209,9 @@ export default function Home() {
                   <h3 className="font-bold text-lg mb-2 group-hover:text-blue-600 transition">
                     {product.name}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-3">{product.store}</p>
+                  <p className="text-gray-600 text-sm mb-3">
+                    {product.storeName}
+                  </p>
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-blue-600">
                       {product.price} ج.م
@@ -273,7 +223,12 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-                  <button className="btn-primary w-full mt-4">أضف للسلة</button>
+                  <button
+                    className="btn-primary w-full mt-4"
+                    onClick={() => addToCart(product)}
+                  >
+                    أضف للسلة
+                  </button>
                 </div>
               ))}
             </div>

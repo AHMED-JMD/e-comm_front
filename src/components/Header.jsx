@@ -1,10 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
 import { FiShoppingCart, FiMenu, FiX } from "react-icons/fi";
 import { useState } from "react";
+import { useCart } from "../context/CartContext";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { totalItems } = useCart();
 
   const isActive = (path) => location.pathname === path;
 
@@ -55,12 +57,15 @@ export default function Header() {
 
           {/* Right side buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <button className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors">
+            <Link
+              to="/cart"
+              className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors"
+            >
               <FiShoppingCart size={24} />
               <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                0
+                {totalItems}
               </span>
-            </button>
+            </Link>
             <Link
               to="/login"
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -112,6 +117,12 @@ export default function Header() {
             >
               عن المنصة
             </a>
+            <Link
+              to="/cart"
+              className="block px-4 py-2 rounded-lg font-medium text-gray-700"
+            >
+              السلة ({totalItems})
+            </Link>
             <div className="space-y-2">
               <Link
                 to="/login"
