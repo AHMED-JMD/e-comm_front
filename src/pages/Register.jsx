@@ -107,7 +107,7 @@ export default function Register() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-2xl">EC</span>
+            <span className="text-white font-bold text-2xl">م</span>
           </div>
         </div>
 
