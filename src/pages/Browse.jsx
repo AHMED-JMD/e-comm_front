@@ -160,7 +160,7 @@ export default function Browse() {
                   {product.storeName}
                 </div>
                 <div className="text-sm text-gray-600 mb-1">
-                  <span className="font-semibold">المدينة:</span>{" "}
+                  <span className="font-semibold">المنطقة:</span>{" "}
                   {product.storeCity}
                 </div>
                 <div className="text-sm text-gray-600 mb-4">
