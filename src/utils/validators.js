@@ -41,7 +41,7 @@ export const isEmpty = (value) => {
 export const formatPrice = (price) => {
   return new Intl.NumberFormat("ar-EG", {
     style: "currency",
-    currency: "EGP",
+    currency: "SDG",
   }).format(price);
 };
 
