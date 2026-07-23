@@ -1,25 +1,53 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff, FiPhone, FiLock } from "react-icons/fi";
+import apiClient, { API_BASE_URL } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
+
+function extractBackendErrors(error) {
+  const responseData = error.response?.data;
+
+  if (Array.isArray(responseData?.errors) && responseData.errors.length > 0) {
+    return responseData.errors.reduce(
+      (accumulator, currentError) => {
+        if (currentError.path && !accumulator[currentError.path]) {
+          accumulator[currentError.path] = currentError.msg;
+        }
+        return accumulator;
+      },
+      { submit: responseData.message || "Validation failed" },
+    );
+  }
+
+  return {
+    submit:
+      responseData?.message || "حدث خطأ أثناء تسجيل الدخول. حاول مرة أخرى.",
+  };
+}
 
 export default function Login() {
   const [formData, setFormData] = useState({
-    phone: "",
+    identifier: "",
     password: "",
   });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [redirectMessage, setRedirectMessage] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleAuth = () => {
+    window.location.href = `${API_BASE_URL}/auth/google`;
+  };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "رقم الهاتف مطلوب";
-    } else if (!/^[0-9]{10,}$/.test(formData.phone.replace(/[\s\-]/g, ""))) {
-      newErrors.phone = "رقم الهاتف يجب أن يكون 10 أرقام على الأقل";
+    if (!formData.identifier.trim()) {
+      newErrors.identifier = "البريد الإلكتروني أو رقم الهاتف مطلوب";
     }
 
     if (!formData.password) {
@@ -56,22 +84,33 @@ export default function Login() {
     }
 
     setIsLoading(true);
+    setErrors({});
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const { data } = await apiClient.post("/auth/login", {
+        identifier: formData.identifier.trim(),
+        password: formData.password,
+      });
 
       // Store login info if remember me is checked
       if (rememberMe) {
-        localStorage.setItem("userPhone", formData.phone);
+        localStorage.setItem("userIdentifier", formData.identifier.trim());
+      } else {
+        localStorage.removeItem("userIdentifier");
       }
 
-      // Simulate successful login
-      localStorage.setItem("isLoggedIn", "true");
+      login({ user: data.user, token: data.token });
+
+      setRedirectMessage(
+        "تم تسجيل الدخول بنجاح. سيتم تحويلك إلى الصفحة الرئيسية...",
+      );
+      setIsRedirecting(true);
+      await new Promise((resolve) => window.setTimeout(resolve, 1500));
       navigate("/");
     } catch (error) {
-      setErrors({ submit: "حدث خطأ أثناء تسجيل الدخول. حاول مرة أخرى." });
+      setErrors(extractBackendErrors(error));
     } finally {
       setIsLoading(false);
+      setIsRedirecting(false);
     }
   };
 
@@ -101,15 +140,23 @@ export default function Login() {
             </div>
           )}
 
+          {redirectMessage && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-700 text-sm text-center">
+                {redirectMessage}
+              </p>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Field */}
+            {/* Email / Phone Field */}
             <div>
               <label
-                htmlFor="phone"
+                htmlFor="identifier"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                رقم الهاتف
+                البريد الإلكتروني أو رقم الهاتف
               </label>
               <div className="relative">
                 <FiPhone
@@ -117,17 +164,17 @@ export default function Login() {
                   size={20}
                 />
                 <input
-                  id="phone"
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
+                  id="identifier"
+                  type="text"
+                  name="identifier"
+                  value={formData.identifier}
                   onChange={handleInputChange}
-                  placeholder="01012345678"
-                  className={`input-field pr-10 ${errors.phone ? "border-red-500 focus:ring-red-500" : ""}`}
+                  placeholder="name@example.com / 01012345678"
+                  className={`input-field pr-10 ${errors.identifier ? "border-red-500 focus:ring-red-500" : ""}`}
                 />
               </div>
-              {errors.phone && (
-                <p className="text-red-500 text-xs mt-2">{errors.phone}</p>
+              {errors.identifier && (
+                <p className="text-red-500 text-xs mt-2">{errors.identifier}</p>
               )}
             </div>
 
@@ -177,24 +224,26 @@ export default function Login() {
                 />
                 <span className="text-sm text-gray-600">تذكرني</span>
               </label>
-              <a
-                href="#"
+              <Link
+                to="/forgot-password"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
                 هل نسيت كلمة المرور؟
-              </a>
+              </Link>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isRedirecting}
               className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {isLoading || isRedirecting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>جاري التحميل...</span>
+                  <span>
+                    {isRedirecting ? "جاري تحويلك..." : "جاري التحميل..."}
+                  </span>
                 </>
               ) : (
                 <span>دخول</span>
@@ -213,8 +262,12 @@ export default function Login() {
           </div>
 
           {/* Social Login */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <button className="btn-outline flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-600">
+          <div className="grid grid-cols-1 gap-4 mb-6">
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              className="btn-outline flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-600"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -234,12 +287,6 @@ export default function Login() {
                 />
               </svg>
               <span className="hidden sm:inline text-sm">جوجل</span>
-            </button>
-            <button className="btn-outline flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-600">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              <span className="hidden sm:inline text-sm">فيسبوك</span>
             </button>
           </div>
 

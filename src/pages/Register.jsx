@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff, FiLock, FiUser, FiPhone } from "react-icons/fi";
+import apiClient, { API_BASE_URL } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
   const [formData, setFormData] = useState({
     fullName: "",
+    email: "",
     phone: "",
     password: "",
     confirmPassword: "",
@@ -14,8 +17,15 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [redirectMessage, setRedirectMessage] = useState("");
   const [registrationType, setRegistrationType] = useState("buyer"); // buyer or seller
+  const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleAuth = () => {
+    window.location.href = `${API_BASE_URL}/auth/google`;
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -24,6 +34,12 @@ export default function Register() {
       newErrors.fullName = "الاسم الكامل مطلوب";
     } else if (formData.fullName.length < 3) {
       newErrors.fullName = "الاسم يجب أن يكون 3 أحرف على الأقل";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "البريد الإلكتروني مطلوب";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "البريد الإلكتروني غير صالح";
     }
 
     if (!formData.phone.trim()) {
@@ -78,26 +94,33 @@ export default function Register() {
     }
 
     setIsLoading(true);
+    setErrors({});
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const { data } = await apiClient.post("/auth/register", {
+        role: "buyer",
+        name: formData.fullName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        password: formData.password,
+      });
 
-      // Save user data
-      localStorage.setItem(
-        "userData",
-        JSON.stringify({
-          ...formData,
-          registrationType,
-        }),
+      login({ user: data.user, token: data.token });
+
+      setRedirectMessage(
+        "تم إنشاء الحساب بنجاح. سيتم تحويلك إلى الصفحة الرئيسية...",
       );
-      localStorage.setItem("isLoggedIn", "true");
-
-      // Redirect to home or complete profile page
+      setIsRedirecting(true);
+      await new Promise((resolve) => window.setTimeout(resolve, 1500));
       navigate("/");
     } catch (error) {
-      setErrors({ submit: "حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى." });
+      setErrors({
+        submit:
+          error.response?.data?.message ||
+          "حدث خطأ أثناء إنشاء الحساب. حاول مرة أخرى.",
+      });
     } finally {
       setIsLoading(false);
+      setIsRedirecting(false);
     }
   };
 
@@ -129,8 +152,16 @@ export default function Register() {
             </div>
           )}
 
+          {redirectMessage && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-700 text-sm text-center">
+                {redirectMessage}
+              </p>
+            </div>
+          )}
+
           {/* Registration Type Selection */}
-          <div className="mb-8 grid grid-cols-2 gap-4">
+          <div className="mb-8 grid grid-cols-1 gap-4">
             <button
               type="button"
               onClick={() => setRegistrationType("buyer")}
@@ -142,7 +173,7 @@ export default function Register() {
             >
               👤 مشتري
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={() => setRegistrationType("seller")}
               className={`p-4 rounded-lg border-2 transition-all font-medium text-center ${
@@ -152,7 +183,7 @@ export default function Register() {
               }`}
             >
               🏪 بائع
-            </button>
+            </button> */}
           </div>
 
           {/* Form */}
@@ -182,6 +213,28 @@ export default function Register() {
               </div>
               {errors.fullName && (
                 <p className="text-red-500 text-xs mt-2">{errors.fullName}</p>
+              )}
+            </div>
+
+            {/* Email Field */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                البريد الإلكتروني
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="name@example.com"
+                className={`input-field ${errors.email ? "border-red-500 focus:ring-red-500" : ""}`}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-2">{errors.email}</p>
               )}
             </div>
 
@@ -336,13 +389,15 @@ export default function Register() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isRedirecting}
               className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
-              {isLoading ? (
+              {isLoading || isRedirecting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>جاري الإنشاء...</span>
+                  <span>
+                    {isRedirecting ? "جاري تحويلك..." : "جاري الإنشاء..."}
+                  </span>
                 </>
               ) : (
                 <span>إنشاء الحساب</span>
@@ -361,8 +416,12 @@ export default function Register() {
           </div>
 
           {/* Social Registration */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <button className="btn-outline flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-600">
+          <div className="grid grid-cols-1 gap-4 mb-6">
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              className="btn-outline flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-600"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -383,12 +442,6 @@ export default function Register() {
               </svg>
               <span className="hidden sm:inline text-sm">جوجل</span>
             </button>
-            <button className="btn-outline flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-600">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              <span className="hidden sm:inline text-sm">فيسبوك</span>
-            </button>
           </div>
 
           {/* Login Link */}
@@ -404,7 +457,7 @@ export default function Register() {
         </div>
 
         {/* Info Box */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-white rounded-lg shadow text-center">
             <div className="text-3xl mb-2">✨</div>
             <p className="text-sm text-gray-600">إنشاء حساب مجاني وآمن</p>
@@ -417,7 +470,7 @@ export default function Register() {
             <div className="text-3xl mb-2">🛡️</div>
             <p className="text-sm text-gray-600">حماية كاملة للبيانات</p>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

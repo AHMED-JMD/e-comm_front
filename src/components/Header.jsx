@@ -2,11 +2,13 @@ import { Link, useLocation } from "react-router-dom";
 import { FiShoppingCart, FiMenu, FiX } from "react-icons/fi";
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { totalItems } = useCart();
+  const { isLoggedIn, logout } = useAuth();
 
   const isActive = (path) => location.pathname === path;
 
@@ -66,26 +68,50 @@ export default function Header() {
                 {totalItems}
               </span>
             </Link>
-            <Link
-              to="/login"
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                isActive("/login")
-                  ? "bg-blue-600 text-white"
-                  : "text-blue-600 border border-blue-600 hover:bg-blue-50"
-              }`}
-            >
-              دخول
-            </Link>
-            <Link
-              to="/register"
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                isActive("/register")
-                  ? "bg-green-600 text-white"
-                  : "bg-green-600 text-white hover:bg-green-700"
-              }`}
-            >
-              تسجيل
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to="/profile"
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    isActive("/profile")
+                      ? "bg-blue-600 text-white"
+                      : "text-blue-600 border border-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  الملف الشخصي
+                </Link>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors text-red-600 border border-red-600 hover:bg-red-50"
+                >
+                  تسجيل الخروج
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    isActive("/login")
+                      ? "bg-blue-600 text-white"
+                      : "text-blue-600 border border-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  دخول
+                </Link>
+                <Link
+                  to="/register"
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    isActive("/register")
+                      ? "bg-green-600 text-white"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  تسجيل
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -123,20 +149,38 @@ export default function Header() {
             >
               السلة ({totalItems})
             </Link>
-            <div className="space-y-2">
-              <Link
-                to="/login"
-                className="block px-4 py-2 rounded-lg font-medium text-blue-600 border border-blue-600 text-center"
-              >
-                دخول
-              </Link>
-              <Link
-                to="/register"
-                className="block px-4 py-2 rounded-lg font-medium bg-green-600 text-white text-center"
-              >
-                تسجيل
-              </Link>
-            </div>
+            {isLoggedIn ? (
+              <div className="space-y-2">
+                <Link
+                  to="/profile"
+                  className="block px-4 py-2 rounded-lg font-medium text-blue-600 border border-blue-600 text-center"
+                >
+                  الملف الشخصي
+                </Link>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="w-full px-4 py-2 rounded-lg font-medium text-red-600 border border-red-600 text-center"
+                >
+                  تسجيل الخروج
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Link
+                  to="/login"
+                  className="block px-4 py-2 rounded-lg font-medium text-blue-600 border border-blue-600 text-center"
+                >
+                  دخول
+                </Link>
+                <Link
+                  to="/register"
+                  className="block px-4 py-2 rounded-lg font-medium bg-green-600 text-white text-center"
+                >
+                  تسجيل
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </nav>
