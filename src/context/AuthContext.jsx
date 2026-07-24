@@ -38,6 +38,15 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUser = (nextUser) => {
+    if (!nextUser) {
+      return;
+    }
+
+    localStorage.setItem("userData", JSON.stringify(nextUser));
+    setUser(nextUser);
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -45,6 +54,7 @@ export function AuthProvider({ children }) {
       isLoggedIn: Boolean(token && user),
       login,
       logout,
+      updateUser,
     }),
     [token, user],
   );
