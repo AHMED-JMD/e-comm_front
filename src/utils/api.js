@@ -1,7 +1,8 @@
 import axios from "axios";
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_URL || "https://e-comm-backend-tan.vercel.app/api";
+// export const API_BASE_URL = "http://localhost:5000/api"; // Uncomment for local development
 
 // Create axios instance
 const apiClient = axios.create({
