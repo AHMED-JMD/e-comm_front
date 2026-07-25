@@ -142,17 +142,17 @@ export default function AdminReports() {
           </p>
         </div>
         <div className="rounded-xl border border-gray-200 p-4 bg-emerald-50">
-          <p className="text-xs text-emerald-700">متوسط قيمة الطلب</p>
+          <p className="text-xs text-emerald-700">متوسط قيمة الطلبات</p>
           <p className="text-2xl font-bold text-emerald-900 mt-2">
             {formatCurrency(summary.avgOrderValue)}
           </p>
         </div>
-        <div className="rounded-xl border border-gray-200 p-4 bg-amber-50">
+        {/* <div className="rounded-xl border border-gray-200 p-4 bg-amber-50">
           <p className="text-xs text-amber-700">منتجات منخفضة المخزون</p>
           <p className="text-2xl font-bold text-amber-900 mt-2">
             {summary.lowStockCount}
           </p>
-        </div>
+        </div> */}
         <div className="rounded-xl border border-gray-200 p-4 bg-violet-50">
           <p className="text-xs text-violet-700">نسبة إتمام الطلبات</p>
           <p className="text-2xl font-bold text-violet-900 mt-2">
@@ -171,7 +171,7 @@ export default function AdminReports() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <section className="border border-gray-200 rounded-xl p-4">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
-            توزيع حالات الطلبات
+            حالات الطلبات
           </h3>
           <div className="space-y-3">
             {ordersByStatus.map((item) => (
