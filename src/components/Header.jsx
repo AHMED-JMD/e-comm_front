@@ -8,7 +8,9 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { totalItems } = useCart();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, user, logout } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   const isActive = (path) => location.pathname === path;
 
@@ -49,6 +51,18 @@ export default function Header() {
             >
               تصفح
             </Link>
+            {isAdmin && (
+              <Link
+                to="/admin/stores"
+                className={`font-medium transition-colors whitespace-nowrap ${
+                  isAdminRoute
+                    ? "text-emerald-600"
+                    : "text-gray-700 hover:text-emerald-600"
+                }`}
+              >
+                بوابة الإدارة
+              </Link>
+            )}
             <a
               href="#"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors whitespace-nowrap"
@@ -137,6 +151,18 @@ export default function Header() {
             >
               تصفح
             </Link>
+            {isAdmin && (
+              <Link
+                to="/admin/stores"
+                className={`block px-4 py-2 rounded-lg font-medium ${
+                  isAdminRoute
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "text-gray-700"
+                }`}
+              >
+                بوابة الإدارة
+              </Link>
+            )}
             <a
               href="#"
               className="block px-4 py-2 rounded-lg font-medium text-gray-700"

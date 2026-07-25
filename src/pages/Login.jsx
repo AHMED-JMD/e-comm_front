@@ -34,7 +34,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [redirectMessage, setRedirectMessage] = useState("");
+  const [statusModal, setStatusModal] = useState({
+    isOpen: false,
+    type: "loading",
+    title: "",
+    message: "",
+    tips: [],
+  });
   const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -84,6 +90,13 @@ export default function Login() {
     }
 
     setIsLoading(true);
+    setStatusModal({
+      isOpen: true,
+      type: "loading",
+      title: "جاري تسجيل الدخول",
+      message: "نتحقق الآن من بياناتك ونجهز حسابك للدخول الآمن.",
+      tips: ["يستغرق هذا عادة بضع ثوانٍ فقط."],
+    });
     setErrors({});
     try {
       const { data } = await apiClient.post("/auth/login", {
@@ -100,13 +113,18 @@ export default function Login() {
 
       login({ user: data.user, token: data.token });
 
-      setRedirectMessage(
-        "تم تسجيل الدخول بنجاح. سيتم تحويلك إلى الصفحة الرئيسية...",
-      );
+      setStatusModal({
+        isOpen: true,
+        type: "success",
+        title: `مرحباً ${data.user?.name || "بك"}`,
+        message: "تم تسجيل الدخول بنجاح. سيتم تحويلك إلى الصفحة الرئيسية.",
+        tips: ["يمكنك الآن تصفح المنتجات وإتمام الطلبات."],
+      });
       setIsRedirecting(true);
-      await new Promise((resolve) => window.setTimeout(resolve, 1500));
+      await new Promise((resolve) => window.setTimeout(resolve, 1700));
       navigate("/");
     } catch (error) {
+      setStatusModal((prev) => ({ ...prev, isOpen: false }));
       setErrors(extractBackendErrors(error));
     } finally {
       setIsLoading(false);
@@ -136,14 +154,6 @@ export default function Login() {
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700 text-sm text-center">
                 {errors.submit}
-              </p>
-            </div>
-          )}
-
-          {redirectMessage && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-700 text-sm text-center">
-                {redirectMessage}
               </p>
             </div>
           )}
@@ -238,16 +248,7 @@ export default function Login() {
               disabled={isLoading || isRedirecting}
               className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading || isRedirecting ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>
-                    {isRedirecting ? "جاري تحويلك..." : "جاري التحميل..."}
-                  </span>
-                </>
-              ) : (
-                <span>دخول</span>
-              )}
+              <span>دخول</span>
             </button>
           </form>
 
@@ -303,12 +304,63 @@ export default function Login() {
         </div>
 
         {/* Security Message */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg text-center">
+        {/* <div className="mt-6 p-4 bg-blue-50 rounded-lg text-center">
           <p className="text-sm text-blue-700">
             🔒 بياناتك آمنة معنا. نستخدم أعلى مستويات التشفير
           </p>
-        </div>
+        </div> */}
       </div>
+
+      {statusModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-gray-100 p-6">
+            <div className="flex flex-col items-center text-center">
+              {statusModal.type === "loading" ? (
+                <>
+                  <div className="w-16 h-16 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin mb-4"></div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    {statusModal.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4">{statusModal.message}</p>
+                  <div className="w-full bg-gray-100 rounded-full h-2 mb-4 overflow-hidden">
+                    <div className="h-full w-1/2 bg-gradient-to-r from-blue-500 to-green-500 animate-pulse"></div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                    <svg
+                      className="w-9 h-9 text-green-600"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path
+                        d="M20 6L9 17l-5-5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-green-700 mb-2">
+                    {statusModal.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4">{statusModal.message}</p>
+                </>
+              )}
+
+              <div className="w-full rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
+                {statusModal.tips.map((tip) => (
+                  <p key={tip} className="text-sm text-gray-700 py-1">
+                    • {tip}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
