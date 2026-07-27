@@ -1,11 +1,19 @@
-import { useMemo, useState } from "react";
-import { useAdmin } from "../context/AdminContext";
+import { useEffect, useMemo, useState } from "react";
+import { useAdmin } from "../context/useAdmin";
 
 export default function AdminStores() {
-  const { stores, products, addStore } = useAdmin();
+  const { stores, products, addStore, updateStore, deleteStore } = useAdmin();
   const [feedback, setFeedback] = useState("");
   const [search, setSearch] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage] = useState(6);
+  const [editingStoreId, setEditingStoreId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    address: "",
+    phone: "",
+  });
   const [storeForm, setStoreForm] = useState({
     name: "",
     address: "",
@@ -14,7 +22,8 @@ export default function AdminStores() {
 
   const productCountByStore = useMemo(() => {
     return products.reduce((acc, product) => {
-      acc[product.storeId] = (acc[product.storeId] || 0) + 1;
+      const key = String(product.storeId);
+      acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
   }, [products]);
@@ -23,7 +32,7 @@ export default function AdminStores() {
     const q = search.trim().toLowerCase();
 
     return stores.filter((store) => {
-      const count = productCountByStore[store.id] || 0;
+      const count = productCountByStore[String(store.id)] || 0;
       const matchesSearch =
         q.length === 0 ||
         store.name.toLowerCase().includes(q) ||
@@ -39,7 +48,21 @@ export default function AdminStores() {
     });
   }, [stores, productCountByStore, search, availabilityFilter]);
 
-  const handleStoreSubmit = (e) => {
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, availabilityFilter, stores.length]);
+
+  const totalPages = Math.max(
+    Math.ceil(filteredStores.length / rowsPerPage),
+    1,
+  );
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const paginatedStores = filteredStores.slice(
+    startIndex,
+    startIndex + rowsPerPage,
+  );
+
+  const handleStoreSubmit = async (e) => {
     e.preventDefault();
 
     if (
@@ -51,9 +74,71 @@ export default function AdminStores() {
       return;
     }
 
-    addStore(storeForm);
-    setStoreForm({ name: "", address: "", phone: "" });
-    setFeedback("تمت إضافة المتجر بنجاح.");
+    try {
+      await addStore(storeForm);
+      setStoreForm({ name: "", address: "", phone: "" });
+      setFeedback("تمت إضافة المتجر بنجاح.");
+    } catch (error) {
+      setFeedback(error.message || "تعذر إضافة المتجر.");
+    }
+  };
+
+  const startEdit = (store) => {
+    setEditingStoreId(store.id);
+    setEditForm({
+      name: store.name,
+      address: store.address,
+      phone: store.phone,
+    });
+    setFeedback("");
+  };
+
+  const cancelEdit = () => {
+    setEditingStoreId(null);
+    setEditForm({ name: "", address: "", phone: "" });
+  };
+
+  const saveEdit = async (storeId) => {
+    if (
+      !editForm.name.trim() ||
+      !editForm.address.trim() ||
+      !editForm.phone.trim()
+    ) {
+      setFeedback("يرجى إدخال كل بيانات المتجر قبل الحفظ.");
+      return;
+    }
+
+    try {
+      await updateStore({ id: storeId, ...editForm });
+      setFeedback("تم تحديث بيانات المتجر بنجاح.");
+      cancelEdit();
+    } catch (error) {
+      setFeedback(error.message || "تعذر تحديث بيانات المتجر.");
+    }
+  };
+
+  const handleDeleteStore = async (store) => {
+    const confirmed = window.confirm(`هل أنت متأكد من حذف متجر ${store.name}؟`);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteStore(store.id);
+      setFeedback("تم حذف المتجر بنجاح.");
+      if (currentPage > 1 && paginatedStores.length === 1) {
+        setCurrentPage((prev) => Math.max(prev - 1, 1));
+      }
+    } catch (error) {
+      setFeedback(error.message || "تعذر حذف المتجر.");
+    }
+  };
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) {
+      return;
+    }
+    setCurrentPage(page);
   };
 
   return (
@@ -87,20 +172,143 @@ export default function AdminStores() {
           {filteredStores.length === 0 ? (
             <p className="text-sm text-gray-500">لا توجد نتائج مطابقة.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredStores.map((store) => (
-                <div
-                  key={store.id}
-                  className="rounded-xl border border-gray-200 bg-gray-50 p-4"
-                >
-                  <h3 className="font-bold text-gray-900">{store.name}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{store.address}</p>
-                  <p className="text-sm text-gray-600">{store.phone}</p>
-                  <div className="mt-3 inline-flex px-2 py-1 rounded-md text-xs bg-blue-100 text-blue-700">
-                    عدد المنتجات: {productCountByStore[store.id] || 0}
-                  </div>
+            <div className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="text-gray-600 border-b border-gray-200">
+                      <th className="text-right py-2">اسم المتجر</th>
+                      <th className="text-right py-2">العنوان</th>
+                      <th className="text-right py-2">الهاتف</th>
+                      <th className="text-right py-2">عدد المنتجات</th>
+                      <th className="text-right py-2">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedStores.map((store) => {
+                      const isEditing = editingStoreId === store.id;
+                      return (
+                        <tr key={store.id} className="border-b border-gray-100">
+                          <td className="py-3 text-gray-900 font-medium">
+                            {isEditing ? (
+                              <input
+                                value={editForm.name}
+                                onChange={(e) =>
+                                  setEditForm((prev) => ({
+                                    ...prev,
+                                    name: e.target.value,
+                                  }))
+                                }
+                                className="input-field py-2"
+                              />
+                            ) : (
+                              store.name
+                            )}
+                          </td>
+                          <td className="py-3 text-gray-700">
+                            {isEditing ? (
+                              <input
+                                value={editForm.address}
+                                onChange={(e) =>
+                                  setEditForm((prev) => ({
+                                    ...prev,
+                                    address: e.target.value,
+                                  }))
+                                }
+                                className="input-field py-2"
+                              />
+                            ) : (
+                              store.address
+                            )}
+                          </td>
+                          <td className="py-3 text-gray-700">
+                            {isEditing ? (
+                              <input
+                                value={editForm.phone}
+                                onChange={(e) =>
+                                  setEditForm((prev) => ({
+                                    ...prev,
+                                    phone: e.target.value,
+                                  }))
+                                }
+                                className="input-field py-2"
+                              />
+                            ) : (
+                              store.phone
+                            )}
+                          </td>
+                          <td className="py-3 text-gray-700">
+                            {productCountByStore[String(store.id)] || 0}
+                          </td>
+                          <td className="py-3">
+                            <div className="flex items-center gap-2">
+                              {isEditing ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => saveEdit(store.id)}
+                                    className="px-3 py-2 text-xs rounded-md bg-emerald-600 text-white"
+                                  >
+                                    حفظ
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={cancelEdit}
+                                    className="px-3 py-2 text-xs rounded-md border border-gray-300 text-gray-700"
+                                  >
+                                    إلغاء
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => startEdit(store)}
+                                    className="px-3 py-2 text-xs rounded-md border border-blue-300 text-blue-700 bg-blue-50"
+                                  >
+                                    تعديل
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteStore(store)}
+                                    className="px-3 py-2 text-xs rounded-md border border-red-300 text-red-700 bg-red-50"
+                                  >
+                                    حذف
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  صفحة {currentPage} من {totalPages}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
+                  >
+                    السابق
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
+                  >
+                    التالي
+                  </button>
                 </div>
-              ))}
+              </div>
             </div>
           )}
         </section>

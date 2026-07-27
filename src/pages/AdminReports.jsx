@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { useAdmin } from "../context/AdminContext";
+import { useAdmin } from "../context/useAdmin";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("ar-EG", {
     style: "currency",
-    currency: "EGP",
+    currency: "SDG",
     maximumFractionDigits: 0,
   }).format(value || 0);
 }

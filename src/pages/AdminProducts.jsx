@@ -1,16 +1,17 @@
-import { useMemo, useState } from "react";
-import { useAdmin } from "../context/AdminContext";
+import { useEffect, useMemo, useState } from "react";
+import { useAdmin } from "../context/useAdmin";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("ar-EG", {
     style: "currency",
-    currency: "EGP",
+    currency: "SDG",
     maximumFractionDigits: 0,
   }).format(value || 0);
 }
 
 export default function AdminProducts() {
-  const { stores, products, addProduct } = useAdmin();
+  const { stores, products, addProduct, loadProducts, productPagination } =
+    useAdmin();
   const [feedback, setFeedback] = useState("");
   const [search, setSearch] = useState("");
   const [storeFilter, setStoreFilter] = useState("all");
@@ -35,25 +36,27 @@ export default function AdminProducts() {
     return Array.from(uniq).filter(Boolean);
   }, [products]);
 
-  const filteredProducts = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      loadProducts({
+        page: 1,
+        limit: productPagination.limit || 10,
+        search: search || undefined,
+        storeId: storeFilter === "all" ? undefined : Number(storeFilter),
+        category: categoryFilter === "all" ? undefined : categoryFilter,
+      }).catch(() => undefined);
+    }, 300);
 
-    return products.filter((product) => {
-      const matchesSearch =
-        q.length === 0 ||
-        product.name.toLowerCase().includes(q) ||
-        product.category.toLowerCase().includes(q);
+    return () => clearTimeout(timeout);
+  }, [
+    search,
+    storeFilter,
+    categoryFilter,
+    productPagination.limit,
+    loadProducts,
+  ]);
 
-      const matchesStore =
-        storeFilter === "all" || product.storeId === storeFilter;
-      const matchesCategory =
-        categoryFilter === "all" || product.category === categoryFilter;
-
-      return matchesSearch && matchesStore && matchesCategory;
-    });
-  }, [products, search, storeFilter, categoryFilter]);
-
-  const handleProductSubmit = (e) => {
+  const handleProductSubmit = async (e) => {
     e.preventDefault();
 
     if (
@@ -67,15 +70,29 @@ export default function AdminProducts() {
       return;
     }
 
-    addProduct(productForm);
-    setProductForm({
-      storeId: productForm.storeId,
-      name: "",
-      price: "",
-      stock: "",
-      category: "",
-    });
-    setFeedback("تمت إضافة المنتج بنجاح.");
+    try {
+      await addProduct(productForm);
+      setProductForm({
+        storeId: productForm.storeId,
+        name: "",
+        price: "",
+        stock: "",
+        category: "",
+      });
+      setFeedback("تمت إضافة المنتج بنجاح.");
+    } catch (error) {
+      setFeedback(error.message || "تعذر إضافة المنتج.");
+    }
+  };
+
+  const goToPage = (nextPage) => {
+    loadProducts({
+      page: nextPage,
+      limit: productPagination.limit || 10,
+      search: search || undefined,
+      storeId: storeFilter === "all" ? undefined : Number(storeFilter),
+      category: categoryFilter === "all" ? undefined : categoryFilter,
+    }).catch(() => undefined);
   };
 
   return (
@@ -118,7 +135,7 @@ export default function AdminProducts() {
         <section className="xl:col-span-2 border border-gray-200 rounded-xl p-4">
           <h2 className="text-lg font-bold text-gray-900 mb-4">كل المنتجات</h2>
 
-          {filteredProducts.length === 0 ? (
+          {products.length === 0 ? (
             <p className="text-sm text-gray-500">لا توجد منتجات مطابقة.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -133,7 +150,7 @@ export default function AdminProducts() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map((product) => (
+                  {products.map((product) => (
                     <tr key={product.id} className="border-b border-gray-100">
                       <td className="py-2 text-gray-900">{product.name}</td>
                       <td className="py-2 text-gray-700">
@@ -148,6 +165,33 @@ export default function AdminProducts() {
                   ))}
                 </tbody>
               </table>
+
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  صفحة {productPagination.page} من{" "}
+                  {productPagination.totalPages}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(productPagination.page - 1)}
+                    disabled={productPagination.page <= 1}
+                    className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
+                  >
+                    السابق
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => goToPage(productPagination.page + 1)}
+                    disabled={
+                      productPagination.page >= productPagination.totalPages
+                    }
+                    className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
+                  >
+                    التالي
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>

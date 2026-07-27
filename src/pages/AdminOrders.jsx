@@ -1,15 +1,23 @@
-import { useMemo, useState } from "react";
-import { useAdmin } from "../context/AdminContext";
+import { useEffect, useMemo, useState } from "react";
+import { useAdmin } from "../context/useAdmin";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("ar-EG", {
     style: "currency",
-    currency: "EGP",
+    currency: "SDG",
     maximumFractionDigits: 0,
   }).format(value || 0);
 }
 
 function statusBadgeClasses(status) {
+  if (status === "ملغي") {
+    return "bg-red-100 text-red-700 border border-red-200";
+  }
+
+  if (status === "قيد الانتظار") {
+    return "bg-slate-100 text-slate-700 border border-slate-200";
+  }
+
   if (status === "تم الاستلام") {
     return "bg-green-100 text-green-700 border border-green-200";
   }
@@ -22,10 +30,18 @@ function statusBadgeClasses(status) {
 }
 
 export default function AdminOrders() {
-  const { orders, stores, orderStatuses, updateOrderStatus } = useAdmin();
+  const {
+    orders,
+    stores,
+    orderStatuses,
+    updateOrderStatus,
+    loadOrders,
+    orderPagination,
+  } = useAdmin();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [storeFilter, setStoreFilter] = useState("all");
+  const [feedback, setFeedback] = useState("");
 
   const storeNameById = useMemo(() => {
     return stores.reduce((acc, store) => {
@@ -34,25 +50,39 @@ export default function AdminOrders() {
     }, {});
   }, [stores]);
 
-  const filteredOrders = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      loadOrders({
+        page: 1,
+        limit: orderPagination.limit || 10,
+        search: search || undefined,
+        status: statusFilter === "all" ? undefined : statusFilter,
+        storeId: storeFilter === "all" ? undefined : Number(storeFilter),
+      }).catch(() => undefined);
+    }, 300);
 
-    return orders.filter((order) => {
-      const orderStoreName = storeNameById[order.storeId] || "";
-      const matchesSearch =
-        q.length === 0 ||
-        order.id.toLowerCase().includes(q) ||
-        order.customerName.toLowerCase().includes(q) ||
-        orderStoreName.toLowerCase().includes(q);
+    return () => clearTimeout(timeout);
+  }, [search, statusFilter, storeFilter, orderPagination.limit, loadOrders]);
 
-      const matchesStatus =
-        statusFilter === "all" || order.status === statusFilter;
-      const matchesStore =
-        storeFilter === "all" || order.storeId === storeFilter;
+  const goToPage = (nextPage) => {
+    loadOrders({
+      page: nextPage,
+      limit: orderPagination.limit || 10,
+      search: search || undefined,
+      status: statusFilter === "all" ? undefined : statusFilter,
+      storeId: storeFilter === "all" ? undefined : Number(storeFilter),
+    }).catch(() => undefined);
+  };
 
-      return matchesSearch && matchesStatus && matchesStore;
-    });
-  }, [orders, search, statusFilter, storeFilter, storeNameById]);
+  const handleStatusChange = async (order, nextStatus) => {
+    setFeedback("");
+    try {
+      await updateOrderStatus(order.rawId, nextStatus);
+      setFeedback("تم تحديث حالة الطلب بنجاح.");
+    } catch (error) {
+      setFeedback(error.message || "تعذر تحديث حالة الطلب.");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -95,7 +125,7 @@ export default function AdminOrders() {
       <section className="border border-gray-200 rounded-xl p-4">
         <h2 className="text-lg font-bold text-gray-900 mb-4">كل الطلبات</h2>
 
-        {filteredOrders.length === 0 ? (
+        {orders.length === 0 ? (
           <p className="text-sm text-gray-500">لا توجد طلبات مطابقة.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -112,7 +142,7 @@ export default function AdminOrders() {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order) => (
+                {orders.map((order) => (
                   <tr key={order.id} className="border-b border-gray-100">
                     <td className="py-3 text-gray-900 font-medium">
                       {order.id}
@@ -136,7 +166,7 @@ export default function AdminOrders() {
                       <select
                         value={order.status}
                         onChange={(e) =>
-                          updateOrderStatus(order.id, e.target.value)
+                          handleStatusChange(order, e.target.value)
                         }
                         className="input-field py-2"
                       >
@@ -151,6 +181,36 @@ export default function AdminOrders() {
                 ))}
               </tbody>
             </table>
+
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-xs text-gray-500">
+                صفحة {orderPagination.page} من {orderPagination.totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => goToPage(orderPagination.page - 1)}
+                  disabled={orderPagination.page <= 1}
+                  className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
+                >
+                  السابق
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goToPage(orderPagination.page + 1)}
+                  disabled={orderPagination.page >= orderPagination.totalPages}
+                  className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
+                >
+                  التالي
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {feedback && (
+          <div className="mt-3 p-3 rounded-lg bg-gray-100 border border-gray-200 text-sm text-gray-700">
+            {feedback}
           </div>
         )}
       </section>

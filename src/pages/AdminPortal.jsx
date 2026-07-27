@@ -1,8 +1,11 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { useAdmin } from "../context/AdminContext";
+import { useAdmin } from "../context/useAdmin";
 
 export default function AdminPortal() {
-  const { stores, products, orders } = useAdmin();
+  const { stores, products, orders, productPagination, orderPagination } =
+    useAdmin();
+  const productsCount = productPagination.totalItems || products.length;
+  const ordersCount = orderPagination.totalItems || orders.length;
 
   const tabClassName = ({ isActive }) =>
     `w-full px-4 py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-between ${
@@ -30,13 +33,13 @@ export default function AdminPortal() {
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
               <p className="text-sm text-emerald-700">عدد المنتجات</p>
               <p className="text-2xl font-bold text-emerald-900 mt-1">
-                {products.length}
+                {productsCount}
               </p>
             </div>
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
               <p className="text-sm text-amber-700">عدد الطلبات</p>
               <p className="text-2xl font-bold text-amber-900 mt-1">
-                {orders.length}
+                {ordersCount}
               </p>
             </div>
           </div>
@@ -51,7 +54,7 @@ export default function AdminPortal() {
               <nav className="space-y-3">
                 <NavLink to="/admin/orders" className={tabClassName}>
                   <span>الطلبات</span>
-                  <span className="text-xs opacity-80">{orders.length}</span>
+                  <span className="text-xs opacity-80">{ordersCount}</span>
                 </NavLink>
                 <NavLink to="/admin/stores" className={tabClassName}>
                   <span>المتاجر</span>
@@ -59,7 +62,7 @@ export default function AdminPortal() {
                 </NavLink>
                 <NavLink to="/admin/products" className={tabClassName}>
                   <span>المنتجات</span>
-                  <span className="text-xs opacity-80">{products.length}</span>
+                  <span className="text-xs opacity-80">{productsCount}</span>
                 </NavLink>
 
                 <NavLink to="/admin/reports" className={tabClassName}>

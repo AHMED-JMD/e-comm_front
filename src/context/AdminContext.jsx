@@ -1,131 +1,232 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import apiClient from "../utils/api";
+import { useAuth } from "./AuthContext";
 
-const AdminContext = createContext(null);
+export const AdminContext = createContext(null);
 
-const STORAGE_KEY = "adminPortalData";
-
-const ORDER_STATUSES = ["جاري العمل", "تم الشحن", "تم الاستلام"];
-
-const defaultData = {
-  stores: [],
-  products: [],
-  orders: [
-    {
-      id: "ord-1001",
-      storeId: "",
-      customerName: "أحمد محمود",
-      total: 1450,
-      itemsCount: 3,
-      status: "جاري العمل",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "ord-1002",
-      storeId: "",
-      customerName: "سارة علي",
-      total: 799,
-      itemsCount: 1,
-      status: "تم الشحن",
-      createdAt: new Date().toISOString(),
-    },
-  ],
+const ORDER_STATUS_LABELS = {
+  pending: "قيد الانتظار",
+  processing: "جاري العمل",
+  shipped: "تم الشحن",
+  delivered: "تم الاستلام",
+  cancelled: "ملغي",
 };
 
-function readStoredData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return defaultData;
-    }
+const ORDER_STATUS_API = Object.fromEntries(
+  Object.entries(ORDER_STATUS_LABELS).map(([key, label]) => [label, key]),
+);
 
-    const parsed = JSON.parse(raw);
-    return {
-      stores: Array.isArray(parsed.stores) ? parsed.stores : [],
-      products: Array.isArray(parsed.products) ? parsed.products : [],
-      orders: Array.isArray(parsed.orders) ? parsed.orders : defaultData.orders,
-    };
-  } catch {
-    return defaultData;
-  }
+const DEFAULT_PAGINATION = {
+  page: 1,
+  limit: 10,
+  totalItems: 0,
+  totalPages: 1,
+};
+
+function extractErrorMessage(error) {
+  return (
+    error?.response?.data?.message || error?.message || "حدث خطأ غير متوقع"
+  );
 }
 
-function createId(prefix) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+function normalizeOrder(rawOrder) {
+  return {
+    ...rawOrder,
+    id: rawOrder.orderNumber || String(rawOrder.id),
+    rawId: rawOrder.id,
+    storeId: String(rawOrder.storeId),
+    total: Number(rawOrder.totalAmount || 0),
+    status: ORDER_STATUS_LABELS[rawOrder.status] || rawOrder.status,
+    backendStatus: rawOrder.status,
+  };
 }
 
 export function AdminProvider({ children }) {
-  const [data, setData] = useState(readStoredData);
+  const { isLoggedIn, user } = useAuth();
+  const [stores, setStores] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [productPagination, setProductPagination] =
+    useState(DEFAULT_PAGINATION);
+  const [orderPagination, setOrderPagination] = useState(DEFAULT_PAGINATION);
+  const [productQuery, setProductQuery] = useState({ page: 1, limit: 10 });
+  const [orderQuery, setOrderQuery] = useState({ page: 1, limit: 10 });
+  const productQueryRef = useRef(productQuery);
+  const orderQueryRef = useRef(orderQuery);
+
+  const loadStores = useCallback(async () => {
+    const { data } = await apiClient.get("/admin/stores");
+    setStores(Array.isArray(data.stores) ? data.stores : []);
+  }, []);
+
+  const loadProducts = useCallback(async (nextQuery = {}) => {
+    const mergedQuery = { ...productQueryRef.current, ...nextQuery };
+    const { data } = await apiClient.get("/admin/products", {
+      params: mergedQuery,
+    });
+
+    setProducts(Array.isArray(data.products) ? data.products : []);
+    setProductPagination(data.pagination || DEFAULT_PAGINATION);
+    productQueryRef.current = mergedQuery;
+    setProductQuery(mergedQuery);
+  }, []);
+
+  const loadOrders = useCallback(async (nextQuery = {}) => {
+    const mergedQuery = { ...orderQueryRef.current, ...nextQuery };
+    const apiQuery = {
+      ...mergedQuery,
+      status: mergedQuery.status
+        ? ORDER_STATUS_API[mergedQuery.status] || mergedQuery.status
+        : undefined,
+    };
+
+    const { data } = await apiClient.get("/admin/orders", {
+      params: apiQuery,
+    });
+
+    const normalizedOrders = Array.isArray(data.orders)
+      ? data.orders.map(normalizeOrder)
+      : [];
+
+    setOrders(normalizedOrders);
+    setOrderPagination(data.pagination || DEFAULT_PAGINATION);
+    orderQueryRef.current = mergedQuery;
+    setOrderQuery(mergedQuery);
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data]);
-
-  const addStore = ({ name, address, phone }) => {
-    const nextStore = {
-      id: createId("store"),
-      name: name.trim(),
-      address: address.trim(),
-      phone: phone.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setData((prev) => ({
-      ...prev,
-      stores: [nextStore, ...prev.stores],
-    }));
-  };
-
-  const addProduct = ({ storeId, name, price, stock, category }) => {
-    const nextProduct = {
-      id: createId("prod"),
-      storeId,
-      name: name.trim(),
-      price: Number(price),
-      stock: Number(stock),
-      category: category.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setData((prev) => ({
-      ...prev,
-      products: [nextProduct, ...prev.products],
-    }));
-  };
-
-  const updateOrderStatus = (orderId, status) => {
-    if (!ORDER_STATUSES.includes(status)) {
+    if (!isLoggedIn || user?.role !== "admin") {
+      setStores([]);
+      setProducts([]);
+      setOrders([]);
       return;
     }
 
-    setData((prev) => ({
-      ...prev,
-      orders: prev.orders.map((order) =>
-        order.id === orderId ? { ...order, status } : order,
-      ),
-    }));
+    Promise.all([
+      loadStores(),
+      loadProducts({ page: 1 }),
+      loadOrders({ page: 1 }),
+    ]).catch(() => {
+      setStores([]);
+      setProducts([]);
+      setOrders([]);
+    });
+  }, [isLoggedIn, user?.role, loadStores, loadProducts, loadOrders]);
+
+  const addStore = async ({ name, address, phone }) => {
+    try {
+      await apiClient.post("/admin/stores", {
+        name: name.trim(),
+        address: address.trim(),
+        phone: phone.trim(),
+      });
+      await loadStores();
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const updateStore = async ({ id, name, address, phone }) => {
+    try {
+      await apiClient.put(`/admin/stores/${id}`, {
+        name: name.trim(),
+        address: address.trim(),
+        phone: phone.trim(),
+      });
+      await loadStores();
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const deleteStore = async (id) => {
+    try {
+      await apiClient.delete(`/admin/stores/${id}`);
+      setStores((prev) => prev.filter((store) => store.id !== id));
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const addProduct = async ({ storeId, name, price, stock, category }) => {
+    try {
+      await apiClient.post("/admin/products", {
+        storeId: Number(storeId),
+        name: name.trim(),
+        category: category.trim(),
+        price: Number(price),
+        stock: Number(stock),
+      });
+      await loadProducts({ page: 1 });
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const updateOrderStatus = async (orderId, statusLabel) => {
+    const status = ORDER_STATUS_API[statusLabel] || statusLabel;
+
+    try {
+      await apiClient.patch(`/admin/orders/${orderId}/status`, { status });
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.rawId === orderId
+            ? {
+                ...order,
+                status: ORDER_STATUS_LABELS[status] || status,
+                backendStatus: status,
+              }
+            : order,
+        ),
+      );
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
   };
 
   const value = useMemo(
     () => ({
-      stores: data.stores,
-      products: data.products,
-      orders: data.orders,
-      orderStatuses: ORDER_STATUSES,
+      stores,
+      products,
+      orders,
+      productPagination,
+      orderPagination,
+      orderStatuses: Object.values(ORDER_STATUS_LABELS),
+      loadStores,
+      loadProducts,
+      loadOrders,
       addStore,
+      updateStore,
+      deleteStore,
       addProduct,
       updateOrderStatus,
     }),
-    [data],
+    [
+      stores,
+      products,
+      orders,
+      productPagination,
+      orderPagination,
+      loadStores,
+      loadProducts,
+      loadOrders,
+      addStore,
+      updateStore,
+      deleteStore,
+      addProduct,
+      updateOrderStatus,
+    ],
   );
 
-  return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
-}
-
-export function useAdmin() {
-  const context = useContext(AdminContext);
-  if (!context) {
-    throw new Error("useAdmin must be used within AdminProvider");
-  }
-
-  return context;
+  return (
+    <AdminContext.Provider value={value}>{children}</AdminContext.Provider>
+  );
 }
