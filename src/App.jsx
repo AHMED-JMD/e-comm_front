@@ -24,6 +24,7 @@ import AdminStores from "./pages/AdminStores";
 import AdminProducts from "./pages/AdminProducts";
 import AdminOrders from "./pages/AdminOrders";
 import AdminReports from "./pages/AdminReports";
+import AdminCategories from "./pages/AdminCategories";
 import "./index.css";
 
 function App() {
@@ -68,6 +69,7 @@ function App() {
                     <Route path="products" element={<AdminProducts />} />
                     <Route path="orders" element={<AdminOrders />} />
                     <Route path="reports" element={<AdminReports />} />
+                    <Route path="categories" element={<AdminCategories />} />
                   </Route>
                 </Routes>
               </main>

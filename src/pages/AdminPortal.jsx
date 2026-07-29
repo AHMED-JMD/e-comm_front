@@ -2,8 +2,14 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useAdmin } from "../context/useAdmin";
 
 export default function AdminPortal() {
-  const { stores, products, orders, productPagination, orderPagination } =
-    useAdmin();
+  const {
+    stores,
+    products,
+    orders,
+    categories,
+    productPagination,
+    orderPagination,
+  } = useAdmin();
   const productsCount = productPagination.totalItems || products.length;
   const ordersCount = orderPagination.totalItems || orders.length;
 
@@ -63,6 +69,12 @@ export default function AdminPortal() {
                 <NavLink to="/admin/products" className={tabClassName}>
                   <span>المنتجات</span>
                   <span className="text-xs opacity-80">{productsCount}</span>
+                </NavLink>
+                <NavLink to="/admin/categories" className={tabClassName}>
+                  <span>الأقسام</span>
+                  <span className="text-xs opacity-80">
+                    {categories.length}
+                  </span>
                 </NavLink>
 
                 <NavLink to="/admin/reports" className={tabClassName}>

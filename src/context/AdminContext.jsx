@@ -1,15 +1,7 @@
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import apiClient from "../utils/api";
 import { useAuth } from "./AuthContext";
-
-export const AdminContext = createContext(null);
+import { AdminContext } from "./useAdmin";
 
 const ORDER_STATUS_LABELS = {
   pending: "قيد الانتظار",
@@ -53,6 +45,7 @@ export function AdminProvider({ children }) {
   const [stores, setStores] = useState([]);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [productPagination, setProductPagination] =
     useState(DEFAULT_PAGINATION);
   const [orderPagination, setOrderPagination] = useState(DEFAULT_PAGINATION);
@@ -64,6 +57,11 @@ export function AdminProvider({ children }) {
   const loadStores = useCallback(async () => {
     const { data } = await apiClient.get("/admin/stores");
     setStores(Array.isArray(data.stores) ? data.stores : []);
+  }, []);
+
+  const loadCategories = useCallback(async () => {
+    const { data } = await apiClient.get("/admin/categories");
+    setCategories(Array.isArray(data.categories) ? data.categories : []);
   }, []);
 
   const loadProducts = useCallback(async (nextQuery = {}) => {
@@ -106,6 +104,7 @@ export function AdminProvider({ children }) {
       setStores([]);
       setProducts([]);
       setOrders([]);
+      setCategories([]);
       return;
     }
 
@@ -113,19 +112,71 @@ export function AdminProvider({ children }) {
       loadStores(),
       loadProducts({ page: 1 }),
       loadOrders({ page: 1 }),
+      loadCategories(),
     ]).catch(() => {
       setStores([]);
       setProducts([]);
       setOrders([]);
+      setCategories([]);
     });
-  }, [isLoggedIn, user?.role, loadStores, loadProducts, loadOrders]);
+  }, [
+    isLoggedIn,
+    user?.role,
+    loadStores,
+    loadProducts,
+    loadOrders,
+    loadCategories,
+  ]);
 
-  const addStore = async ({ name, address, phone }) => {
+  const addCategory = async ({ name, description }) => {
+    try {
+      await apiClient.post("/admin/categories", {
+        name: name.trim(),
+        description: description ? description.trim() : undefined,
+      });
+      await loadCategories();
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const updateCategory = async ({ id, name, description }) => {
+    try {
+      await apiClient.put(`/admin/categories/${id}`, {
+        name: name.trim(),
+        description: description ? description.trim() : undefined,
+      });
+      await loadCategories();
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const deleteCategory = async (id) => {
+    try {
+      await apiClient.delete(`/admin/categories/${id}`);
+      setCategories((prev) => prev.filter((category) => category.id !== id));
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const addStore = async ({
+    name,
+    ownerName,
+    address,
+    description,
+    phone,
+    categoryId,
+  }) => {
     try {
       await apiClient.post("/admin/stores", {
         name: name.trim(),
+        ownerName: ownerName.trim(),
         address: address.trim(),
+        description: description ? description.trim() : undefined,
         phone: phone.trim(),
+        categoryId: Number(categoryId),
       });
       await loadStores();
     } catch (error) {
@@ -133,12 +184,23 @@ export function AdminProvider({ children }) {
     }
   };
 
-  const updateStore = async ({ id, name, address, phone }) => {
+  const updateStore = async ({
+    id,
+    name,
+    ownerName,
+    address,
+    description,
+    phone,
+    categoryId,
+  }) => {
     try {
       await apiClient.put(`/admin/stores/${id}`, {
         name: name.trim(),
+        ownerName: ownerName.trim(),
         address: address.trim(),
+        description: description ? description.trim() : undefined,
         phone: phone.trim(),
+        categoryId: Number(categoryId),
       });
       await loadStores();
     } catch (error) {
@@ -155,16 +217,103 @@ export function AdminProvider({ children }) {
     }
   };
 
-  const addProduct = async ({ storeId, name, price, stock, category }) => {
+  const addProduct = async ({
+    storeId,
+    name,
+    price,
+    stock,
+    categoryId,
+    image,
+  }) => {
     try {
-      await apiClient.post("/admin/products", {
+      const formData = new FormData();
+      formData.append("storeId", Number(storeId));
+      formData.append("name", name.trim());
+      formData.append("categoryId", Number(categoryId));
+      formData.append("price", Number(price));
+      formData.append("stock", Number(stock));
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await apiClient.post("/admin/products", formData, {
+        headers: { "Content-Type": undefined },
+      });
+      await loadProducts({ page: 1 });
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const updateProduct = async ({
+    id,
+    storeId,
+    name,
+    price,
+    stock,
+    categoryId,
+  }) => {
+    try {
+      await apiClient.put(`/admin/products/${id}`, {
         storeId: Number(storeId),
         name: name.trim(),
-        category: category.trim(),
+        categoryId: Number(categoryId),
         price: Number(price),
         stock: Number(stock),
       });
-      await loadProducts({ page: 1 });
+      await loadProducts({ page: productQueryRef.current.page || 1 });
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const deleteProduct = async (id) => {
+    try {
+      await apiClient.delete(`/admin/products/${id}`);
+      setProducts((prev) => prev.filter((product) => product.id !== id));
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const updateProductImage = async (id, file) => {
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const { data } = await apiClient.patch(
+        `/admin/products/${id}/image`,
+        formData,
+        { headers: { "Content-Type": undefined } },
+      );
+
+      setProducts((prev) =>
+        prev.map((product) =>
+          product.id === id
+            ? { ...product, image: data.product.image }
+            : product,
+        ),
+      );
+
+      return data.product;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const removeProductImage = async (id) => {
+    try {
+      const { data } = await apiClient.delete(`/admin/products/${id}/image`);
+
+      setProducts((prev) =>
+        prev.map((product) =>
+          product.id === id
+            ? { ...product, image: data.product.image }
+            : product,
+        ),
+      );
+
+      return data.product;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -197,31 +346,49 @@ export function AdminProvider({ children }) {
       stores,
       products,
       orders,
+      categories,
       productPagination,
       orderPagination,
       orderStatuses: Object.values(ORDER_STATUS_LABELS),
       loadStores,
       loadProducts,
       loadOrders,
+      loadCategories,
       addStore,
       updateStore,
       deleteStore,
       addProduct,
+      updateProduct,
+      deleteProduct,
+      updateProductImage,
+      removeProductImage,
+      addCategory,
+      updateCategory,
+      deleteCategory,
       updateOrderStatus,
     }),
     [
       stores,
       products,
       orders,
+      categories,
       productPagination,
       orderPagination,
       loadStores,
       loadProducts,
       loadOrders,
+      loadCategories,
       addStore,
       updateStore,
       deleteStore,
       addProduct,
+      updateProduct,
+      deleteProduct,
+      updateProductImage,
+      removeProductImage,
+      addCategory,
+      updateCategory,
+      deleteCategory,
       updateOrderStatus,
     ],
   );
