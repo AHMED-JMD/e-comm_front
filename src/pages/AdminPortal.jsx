@@ -62,6 +62,12 @@ export default function AdminPortal() {
                   <span>الطلبات</span>
                   <span className="text-xs opacity-80">{ordersCount}</span>
                 </NavLink>
+                <NavLink to="/admin/categories" className={tabClassName}>
+                  <span>الأقسام</span>
+                  <span className="text-xs opacity-80">
+                    {categories.length}
+                  </span>
+                </NavLink>
                 <NavLink to="/admin/stores" className={tabClassName}>
                   <span>المتاجر</span>
                   <span className="text-xs opacity-80">{stores.length}</span>
@@ -70,13 +76,6 @@ export default function AdminPortal() {
                   <span>المنتجات</span>
                   <span className="text-xs opacity-80">{productsCount}</span>
                 </NavLink>
-                <NavLink to="/admin/categories" className={tabClassName}>
-                  <span>الأقسام</span>
-                  <span className="text-xs opacity-80">
-                    {categories.length}
-                  </span>
-                </NavLink>
-
                 <NavLink to="/admin/reports" className={tabClassName}>
                   <span>التقارير</span>
                   <span className="text-xs opacity-80">Live</span>
