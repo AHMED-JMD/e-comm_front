@@ -13,10 +13,10 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-glow">
-                <span className="text-white font-display font-black">م</span>
+                <span className="text-white font-display font-black">ل</span>
               </div>
               <span className="text-lg font-display font-extrabold text-white">
-                متجري
+                لُوما
               </span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">

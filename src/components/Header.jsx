@@ -37,12 +37,12 @@ export default function Header() {
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-glow group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
               <span className="text-white font-display font-black text-xl">
-                م
+                ل
               </span>
               <span className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-blue-600 to-pink-500 opacity-40 blur-md -z-10" />
             </div>
             <span className="hidden sm:inline text-xl font-display font-extrabold text-gradient">
-              متجري
+              لُوما
             </span>
           </Link>
 
@@ -104,7 +104,10 @@ export default function Header() {
                 >
                   دخول
                 </Link>
-                <Link to="/register" className="btn-primary !px-5 !py-2 text-sm">
+                <Link
+                  to="/register"
+                  className="btn-primary !px-5 !py-2 text-sm"
+                >
                   تسجيل
                 </Link>
               </>
@@ -126,7 +129,9 @@ export default function Header() {
             <Link
               to="/"
               className={`block px-4 py-2.5 rounded-2xl font-bold ${
-                isActive("/") ? "bg-blue-600 text-white" : "text-gray-700 bg-gray-50"
+                isActive("/")
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 bg-gray-50"
               }`}
             >
               الرئيسية
