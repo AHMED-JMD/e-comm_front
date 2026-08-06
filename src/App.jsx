@@ -63,7 +63,7 @@ function App() {
                   >
                     <Route
                       index
-                      element={<Navigate to="/admin/stores" replace />}
+                      element={<Navigate to="/admin/categories" replace />}
                     />
                     <Route path="stores" element={<AdminStores />} />
                     <Route path="products" element={<AdminProducts />} />
