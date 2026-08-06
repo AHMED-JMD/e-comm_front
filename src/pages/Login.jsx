@@ -138,7 +138,7 @@ export default function Login() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-glow">
-            <span className="text-white font-bold text-2xl">م</span>
+            <span className="text-white font-bold text-2xl">ل</span>
           </div>
         </div>
 
