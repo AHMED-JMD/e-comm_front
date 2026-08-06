@@ -9,15 +9,15 @@ export default function Modal({ isOpen, onClose, title, children }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-gray-100 p-6"
+        className="w-full max-w-md rounded-3xl bg-white shadow-glow-lg border border-black/[0.04] p-6 animate-fade-up"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+          <h3 className="text-lg font-display font-bold text-gray-900">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-colors"
             aria-label="إغلاق"
           >
             <svg

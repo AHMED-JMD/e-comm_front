@@ -14,82 +14,72 @@ export default function Header() {
 
   const isActive = (path) => location.pathname === path;
 
+  const navLink = (path, label, variant = "blue") => (
+    <Link
+      to={path}
+      className={`relative px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${
+        isActive(path)
+          ? variant === "green"
+            ? "bg-green-600 text-white shadow-glow-green"
+            : "bg-blue-600 text-white shadow-glow"
+          : "text-gray-700 hover:text-blue-700 hover:bg-blue-50"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-md">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <header className="sticky top-0 z-50 glass shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">م</span>
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-glow group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
+              <span className="text-white font-display font-black text-xl">
+                م
+              </span>
+              <span className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-blue-600 to-pink-500 opacity-40 blur-md -z-10" />
             </div>
-            <span className="hidden sm:inline text-xl font-bold text-gray-900">
+            <span className="hidden sm:inline text-xl font-display font-extrabold text-gradient">
               متجري
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex gap-8 items-center">
-            <Link
-              to="/"
-              className={`font-medium transition-colors whitespace-nowrap ${
-                isActive("/")
-                  ? "text-blue-600"
-                  : "text-gray-700 hover:text-blue-600"
-              }`}
-            >
-              الرئيسية
-            </Link>
-
-            <Link
-              to="/browse"
-              className={`font-medium transition-colors whitespace-nowrap ${
-                isActive("/browse")
-                  ? "text-blue-600"
-                  : "text-gray-700 hover:text-blue-600"
-              }`}
-            >
-              تصفح
-            </Link>
-            {isAdmin && (
-              <Link
-                to="/admin/stores"
-                className={`font-medium transition-colors whitespace-nowrap ${
-                  isAdminRoute
-                    ? "text-emerald-600"
-                    : "text-gray-700 hover:text-emerald-600"
-                }`}
-              >
-                بوابة الإدارة
-              </Link>
-            )}
+          <div className="hidden md:flex gap-1 items-center bg-white/60 border border-black/[0.04] rounded-full p-1">
+            {navLink("/", "الرئيسية")}
+            {navLink("/browse", "تصفح")}
+            {isAdmin && navLink("/admin/stores", "بوابة الإدارة", "green")}
             <a
               href="#"
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors whitespace-nowrap"
+              className="px-4 py-2 rounded-full font-bold text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition-all whitespace-nowrap"
             >
               عن المنصة
             </a>
           </div>
 
           {/* Right side buttons */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <Link
               to="/cart"
-              className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors"
+              className="relative p-2.5 rounded-full text-gray-700 hover:text-white hover:bg-blue-600 transition-all"
             >
-              <FiShoppingCart size={24} />
-              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {totalItems}
-              </span>
+              <FiShoppingCart size={22} />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-br from-pink-500 to-purple-600 text-white text-[11px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-glow-pink">
+                  {totalItems}
+                </span>
+              )}
             </Link>
             {isLoggedIn ? (
               <>
                 <Link
                   to="/profile"
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-full font-bold text-sm transition-all ${
                     isActive("/profile")
-                      ? "bg-blue-600 text-white"
-                      : "text-blue-600 border border-blue-600 hover:bg-blue-50"
+                      ? "bg-blue-600 text-white shadow-glow"
+                      : "text-blue-700 border-2 border-blue-600/30 hover:border-blue-600"
                   }`}
                 >
                   الملف الشخصي
@@ -97,7 +87,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={logout}
-                  className="px-4 py-2 rounded-lg font-medium transition-colors text-red-600 border border-red-600 hover:bg-red-50"
+                  className="px-4 py-2 rounded-full font-bold text-sm text-red-600 border-2 border-red-200 hover:border-red-400 hover:bg-red-50 transition-all"
                 >
                   تسجيل الخروج
                 </button>
@@ -106,22 +96,15 @@ export default function Header() {
               <>
                 <Link
                   to="/login"
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-full font-bold text-sm transition-all ${
                     isActive("/login")
-                      ? "bg-blue-600 text-white"
-                      : "text-blue-600 border border-blue-600 hover:bg-blue-50"
+                      ? "bg-blue-600 text-white shadow-glow"
+                      : "text-blue-700 border-2 border-blue-600/30 hover:border-blue-600"
                   }`}
                 >
                   دخول
                 </Link>
-                <Link
-                  to="/register"
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    isActive("/register")
-                      ? "bg-green-600 text-white"
-                      : "bg-green-600 text-white hover:bg-green-700"
-                  }`}
-                >
+                <Link to="/register" className="btn-primary !px-5 !py-2 text-sm">
                   تسجيل
                 </Link>
               </>
@@ -129,35 +112,38 @@ export default function Header() {
           </div>
 
           {/* Mobile menu button */}
-          <button className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          <button
+            className="md:hidden p-2 rounded-full bg-blue-50 text-blue-700"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <FiX size={22} /> : <FiMenu size={22} />}
           </button>
         </div>
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden mt-4 space-y-3 pb-4">
+          <div className="md:hidden mt-4 space-y-2 pb-4 animate-fade-up">
             <Link
               to="/"
-              className={`block px-4 py-2 rounded-lg font-medium ${
-                isActive("/") ? "bg-blue-50 text-blue-600" : "text-gray-700"
+              className={`block px-4 py-2.5 rounded-2xl font-bold ${
+                isActive("/") ? "bg-blue-600 text-white" : "text-gray-700 bg-gray-50"
               }`}
             >
               الرئيسية
             </Link>
             <Link
               to="/browse"
-              className="block px-4 py-2 rounded-lg font-medium text-gray-700"
+              className="block px-4 py-2.5 rounded-2xl font-bold text-gray-700 bg-gray-50"
             >
               تصفح
             </Link>
             {isAdmin && (
               <Link
                 to="/admin/stores"
-                className={`block px-4 py-2 rounded-lg font-medium ${
+                className={`block px-4 py-2.5 rounded-2xl font-bold ${
                   isAdminRoute
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "text-gray-700"
+                    ? "bg-green-600 text-white"
+                    : "text-gray-700 bg-gray-50"
                 }`}
               >
                 بوابة الإدارة
@@ -165,44 +151,41 @@ export default function Header() {
             )}
             <a
               href="#"
-              className="block px-4 py-2 rounded-lg font-medium text-gray-700"
+              className="block px-4 py-2.5 rounded-2xl font-bold text-gray-700 bg-gray-50"
             >
               عن المنصة
             </a>
             <Link
               to="/cart"
-              className="block px-4 py-2 rounded-lg font-medium text-gray-700"
+              className="block px-4 py-2.5 rounded-2xl font-bold text-gray-700 bg-gray-50"
             >
               السلة ({totalItems})
             </Link>
             {isLoggedIn ? (
-              <div className="space-y-2">
+              <div className="space-y-2 pt-1">
                 <Link
                   to="/profile"
-                  className="block px-4 py-2 rounded-lg font-medium text-blue-600 border border-blue-600 text-center"
+                  className="block px-4 py-2.5 rounded-2xl font-bold text-blue-700 border-2 border-blue-600/30 text-center"
                 >
                   الملف الشخصي
                 </Link>
                 <button
                   type="button"
                   onClick={logout}
-                  className="w-full px-4 py-2 rounded-lg font-medium text-red-600 border border-red-600 text-center"
+                  className="w-full px-4 py-2.5 rounded-2xl font-bold text-red-600 border-2 border-red-200 text-center"
                 >
                   تسجيل الخروج
                 </button>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 pt-1">
                 <Link
                   to="/login"
-                  className="block px-4 py-2 rounded-lg font-medium text-blue-600 border border-blue-600 text-center"
+                  className="block px-4 py-2.5 rounded-2xl font-bold text-blue-700 border-2 border-blue-600/30 text-center"
                 >
                   دخول
                 </Link>
-                <Link
-                  to="/register"
-                  className="block px-4 py-2 rounded-lg font-medium bg-green-600 text-white text-center"
-                >
+                <Link to="/register" className="btn-primary w-full text-center">
                   تسجيل
                 </Link>
               </div>

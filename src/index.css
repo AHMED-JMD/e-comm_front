@@ -11,50 +11,88 @@
 html {
   scroll-behavior: smooth;
   direction: rtl;
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    "Droid Arabic Kufi",
-    sans-serif;
+  font-family: "Tajawal", "Inter", system-ui, -apple-system, sans-serif;
 }
 
 body {
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    "Droid Arabic Kufi",
-    sans-serif;
-  @apply bg-white text-gray-900;
+  font-family: "Tajawal", "Inter", system-ui, -apple-system, sans-serif;
+  @apply bg-canvas text-ink;
   direction: rtl;
   text-align: right;
+}
+
+::selection {
+  background: #5b3de8;
+  color: #fff;
+}
+
+/* Slim, modern scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #5b3de8, #e721a6);
+  border-radius: 999px;
+  border: 2px solid #fbfaff;
 }
 
 /* Custom utility classes */
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium shadow-md hover:shadow-lg;
+    @apply relative inline-flex items-center justify-center px-6 py-3 rounded-full font-bold text-white
+      bg-gradient-to-l from-blue-600 to-purple-600 bg-[length:160%_160%]
+      shadow-glow transition-all duration-300
+      hover:shadow-glow-lg hover:-translate-y-0.5 hover:bg-right
+      active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-secondary {
-    @apply px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium shadow-md hover:shadow-lg;
+    @apply relative inline-flex items-center justify-center px-6 py-3 rounded-full font-bold text-white
+      bg-gradient-to-l from-green-500 to-emerald-600 bg-[length:160%_160%]
+      shadow-glow-green transition-all duration-300
+      hover:shadow-glow-lg hover:-translate-y-0.5 hover:bg-right
+      active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-outline {
-    @apply px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors duration-200 font-medium;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-full font-bold
+      border-2 border-blue-600/30 text-blue-700 bg-white/60 backdrop-blur-sm
+      transition-all duration-300 hover:border-blue-600 hover:bg-blue-50 hover:-translate-y-0.5;
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6;
+    @apply bg-white/90 backdrop-blur-sm rounded-3xl shadow-card border border-black/[0.04]
+      hover:shadow-card-hover transition-all duration-300 p-6;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+    @apply w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-2xl
+      focus:outline-none focus:ring-4 focus:ring-blue-600/15 focus:border-blue-500
+      transition-all duration-200 placeholder:text-gray-400;
   }
 
   .section-title {
-    @apply text-3xl font-bold text-gray-900 mb-12 text-center;
+    @apply text-3xl md:text-4xl font-extrabold text-ink mb-12 text-center tracking-tight;
+  }
+
+  .badge-pill {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-l from-blue-600 via-purple-600 to-pink-500 bg-clip-text text-transparent;
+  }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40;
+  }
+
+  .blob {
+    @apply absolute rounded-full blur-3xl opacity-60 pointer-events-none animate-blob;
   }
 
   /* RTL specific classes */

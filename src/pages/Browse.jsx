@@ -28,26 +28,26 @@ export default function Browse() {
   }, [query, category, status, maxPrice]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
+    <div className="min-h-screen bg-mesh-soft py-10 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="animate-fade-up">
+          <h1 className="text-3xl md:text-4xl font-display font-black text-gradient mb-2">
             تصفح المنتجات
           </h1>
           <p className="text-gray-600">ابحث، صفِّ، واختر المنتج المناسب لك.</p>
         </div>
 
-        <section className="card space-y-4">
+        <section className="card space-y-5">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
             <div className="lg:col-span-2">
-              <label className="block mb-2 text-sm font-medium text-gray-700">
+              <label className="block mb-2 text-sm font-bold text-gray-700">
                 بحث سريع
               </label>
               <div className="relative">
-                <FiSearch className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400" />
+                <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
                 <input
                   type="text"
-                  className="input-field pr-10"
+                  className="input-field pr-11"
                   placeholder="ابحث بالاسم أو الوصف أو المتجر"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -56,7 +56,7 @@ export default function Browse() {
             </div>
 
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
+              <label className="block mb-2 text-sm font-bold text-gray-700">
                 التصنيف
               </label>
               <select
@@ -74,7 +74,7 @@ export default function Browse() {
             </div>
 
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
+              <label className="block mb-2 text-sm font-bold text-gray-700">
                 حالة المنتج
               </label>
               <select
@@ -91,11 +91,13 @@ export default function Browse() {
 
           <div>
             <div className="flex items-center justify-between mb-2 text-sm text-gray-700">
-              <span className="inline-flex items-center gap-2">
-                <FiFilter />
+              <span className="inline-flex items-center gap-2 font-bold">
+                <FiFilter className="text-blue-600" />
                 الحد الأقصى للسعر
               </span>
-              <span className="font-semibold">{formatPrice(maxPrice)}</span>
+              <span className="badge-pill bg-blue-50 text-blue-700">
+                {formatPrice(maxPrice)}
+              </span>
             </div>
             <input
               type="range"
@@ -104,7 +106,7 @@ export default function Browse() {
               step="100"
               value={maxPrice}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
-              className="w-full"
+              className="w-full accent-blue-600"
             />
           </div>
         </section>
@@ -112,10 +114,12 @@ export default function Browse() {
         <div className="flex items-center justify-between">
           <p className="text-gray-700 font-medium">
             عدد النتائج:{" "}
-            <span className="text-blue-600">{filteredProducts.length}</span>
+            <span className="text-blue-700 font-bold">
+              {filteredProducts.length}
+            </span>
           </p>
           <button
-            className="btn-outline"
+            className="btn-outline !py-2"
             onClick={() => {
               setQuery("");
               setCategory("الكل");
@@ -132,16 +136,20 @@ export default function Browse() {
             {filteredProducts.map((product) => (
               <article
                 key={product.id}
-                className="card hover:shadow-xl transition-all hover:-translate-y-1"
+                className="card hover:-translate-y-2 group overflow-hidden"
               >
-                <div className="text-6xl text-center mb-4">{product.image}</div>
+                <div className="-mx-6 -mt-6 mb-4 px-6 pt-6 pb-6 bg-mesh-soft text-center">
+                  <div className="text-6xl group-hover:scale-110 transition-transform">
+                    {product.image}
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-bold text-gray-900">
                     {product.name}
                   </h2>
                   <span
-                    className={`text-xs px-2 py-1 rounded font-medium ${
+                    className={`badge-pill ${
                       product.status === "جديد"
                         ? "bg-green-100 text-green-700"
                         : "bg-orange-100 text-orange-700"
@@ -169,10 +177,10 @@ export default function Browse() {
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-blue-600">
+                  <span className="text-2xl font-display font-extrabold text-gradient">
                     {formatPrice(product.price)}
                   </span>
-                  <span className="text-sm bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-medium">
+                  <span className="badge-pill bg-amber-50 text-amber-700">
                     ★ {product.rating}
                   </span>
                 </div>
@@ -189,6 +197,7 @@ export default function Browse() {
           </section>
         ) : (
           <div className="card text-center py-12">
+            <div className="text-5xl mb-3">🔍</div>
             <p className="text-lg text-gray-600">
               لا توجد منتجات مطابقة للفلاتر الحالية.
             </p>
