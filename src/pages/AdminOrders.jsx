@@ -32,7 +32,7 @@ function statusBadgeClasses(status) {
   }
 
   if (status === "تم الشحن") {
-    return "bg-blue-100 text-blue-700 border border-blue-200";
+    return "bg-pink-100 text-pink-700 border border-pink-200";
   }
 
   return "bg-amber-100 text-amber-700 border border-amber-200";
@@ -157,7 +157,7 @@ export default function AdminOrders() {
         <select
           value={order.status}
           onChange={(event) => handleStatusChange(order, event.target.value)}
-          className="px-3 py-2 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-600/10 transition-all"
+          className="px-3 py-2 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-600/10 transition-all"
         >
           {orderStatuses.map((status) => (
             <option key={status} value={status}>
@@ -211,7 +211,7 @@ export default function AdminOrders() {
               className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-gray-100"
             >
               <span className="inline-flex items-center gap-2 text-gray-800 font-medium">
-                <FiPackage className="text-blue-500" />
+                <FiPackage className="text-pink-500" />
                 {item.productName}
               </span>
               <span className="text-gray-600 text-xs">
@@ -223,7 +223,7 @@ export default function AdminOrders() {
       )}
 
       {order.notes && (
-        <p className="p-3 rounded-2xl bg-blue-50 text-blue-800 text-xs">
+        <p className="p-3 rounded-2xl bg-pink-50 text-pink-800 text-xs">
           <span className="font-bold">ملاحظات العميل: </span>
           {order.notes}
         </p>
@@ -242,7 +242,7 @@ export default function AdminOrders() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
-          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-pink-500" />
           <input
             type="text"
             value={search}
@@ -280,7 +280,7 @@ export default function AdminOrders() {
       </div>
 
       {feedback && (
-        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
+        <div className="p-3 rounded-2xl bg-pink-50 border border-pink-100 text-sm text-pink-800">
           {feedback}
         </div>
       )}

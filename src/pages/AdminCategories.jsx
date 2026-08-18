@@ -49,7 +49,7 @@ function CategoryAppearancePicker({ value, onChange }) {
               title={color.label}
               className={`w-9 h-9 rounded-xl bg-gradient-to-br ${color.gradient} transition-transform hover:scale-110 ${
                 value.color === color.key
-                  ? "ring-4 ring-offset-2 ring-blue-200 scale-110"
+                  ? "ring-4 ring-offset-2 ring-pink-200 scale-110"
                   : ""
               }`}
               aria-label={color.label}
@@ -79,7 +79,7 @@ function CategoryAppearancePicker({ value, onChange }) {
                 className={`aspect-square rounded-xl flex items-center justify-center transition-all ${
                   isSelected
                     ? `bg-gradient-to-br ${palette.gradient} text-white shadow-md scale-105`
-                    : "bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-700"
+                    : "bg-gray-50 text-gray-600 hover:bg-pink-50 hover:text-pink-700"
                 }`}
                 aria-label={item.label}
               >
@@ -225,7 +225,7 @@ export default function AdminCategories() {
       </div>
 
       <div className="relative">
-        <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+        <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-pink-500" />
         <input
           type="text"
           value={search}
@@ -236,7 +236,7 @@ export default function AdminCategories() {
       </div>
 
       {feedback && (
-        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
+        <div className="p-3 rounded-2xl bg-pink-50 border border-pink-100 text-sm text-pink-800">
           {feedback}
         </div>
       )}
@@ -288,7 +288,7 @@ export default function AdminCategories() {
                     type="button"
                     onClick={() => openEditModal(category)}
                     disabled={deletingCategoryId === category.id}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-60"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border border-pink-200 text-pink-700 bg-pink-50 hover:bg-pink-100 transition-colors disabled:opacity-60"
                   >
                     <FiEdit2 size={14} />
                     تعديل

@@ -295,9 +295,12 @@ export default function Home() {
           ) : (
             <div className="card text-center py-12">
               <div className="text-5xl mb-4">🛍️</div>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 text-lg mb-4">
                 لا توجد منتجات معروضة حالياً.
               </p>
+              <Link to="/browse" className="btn-outline !py-2.5">
+                تصفح كل المنتجات
+              </Link>
             </div>
           )}
         </div>

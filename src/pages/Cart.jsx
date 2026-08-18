@@ -206,7 +206,7 @@ export default function Cart() {
           <button
             type="button"
             onClick={goToCheckout}
-            className="btn-secondary w-full mb-3 inline-flex items-center justify-center gap-2"
+            className="btn-primary w-full mb-3 inline-flex items-center justify-center gap-2"
           >
             متابعة إتمام الطلب
             <FiArrowLeft />

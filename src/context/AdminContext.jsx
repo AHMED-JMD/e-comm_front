@@ -50,11 +50,15 @@ export function AdminProvider({ children }) {
   const [orderPagination, setOrderPagination] = useState(DEFAULT_PAGINATION);
   const [reviewsPagination, setReviewsPagination] =
     useState(DEFAULT_PAGINATION);
+  const [users, setUsers] = useState([]);
+  const [usersPagination, setUsersPagination] = useState(DEFAULT_PAGINATION);
+  const [userStats, setUserStats] = useState(null);
   const [productQuery, setProductQuery] = useState({ page: 1, limit: 10 });
   const [orderQuery, setOrderQuery] = useState({ page: 1, limit: 10 });
   const productQueryRef = useRef(productQuery);
   const orderQueryRef = useRef(orderQuery);
   const reviewQueryRef = useRef({ page: 1, limit: 10 });
+  const userQueryRef = useRef({ page: 1, limit: 10 });
 
   const loadStores = useCallback(async () => {
     const { data } = await apiClient.get("/admin/stores");
@@ -75,6 +79,22 @@ export function AdminProvider({ children }) {
     setReviews(Array.isArray(data.reviews) ? data.reviews : []);
     setReviewsPagination(data.pagination || DEFAULT_PAGINATION);
     reviewQueryRef.current = mergedQuery;
+  }, []);
+
+  const loadUsers = useCallback(async (nextQuery = {}) => {
+    const mergedQuery = { ...userQueryRef.current, ...nextQuery };
+    const { data } = await apiClient.get("/admin/users", {
+      params: mergedQuery,
+    });
+
+    setUsers(Array.isArray(data.users) ? data.users : []);
+    setUsersPagination(data.pagination || DEFAULT_PAGINATION);
+    userQueryRef.current = mergedQuery;
+  }, []);
+
+  const loadUserStats = useCallback(async () => {
+    const { data } = await apiClient.get("/admin/users/stats");
+    setUserStats(data.stats || null);
   }, []);
 
   const loadProducts = useCallback(async (nextQuery = {}) => {
@@ -119,6 +139,8 @@ export function AdminProvider({ children }) {
       setOrders([]);
       setCategories([]);
       setReviews([]);
+      setUsers([]);
+      setUserStats(null);
       return;
     }
 
@@ -128,12 +150,15 @@ export function AdminProvider({ children }) {
       loadOrders({ page: 1 }),
       loadCategories(),
       loadReviews({ page: 1 }),
+      loadUserStats(),
     ]).catch(() => {
       setStores([]);
       setProducts([]);
       setOrders([]);
       setCategories([]);
       setReviews([]);
+      setUsers([]);
+      setUserStats(null);
     });
   }, [
     isLoggedIn,
@@ -143,6 +168,7 @@ export function AdminProvider({ children }) {
     loadOrders,
     loadCategories,
     loadReviews,
+    loadUserStats,
   ]);
 
   const addCategory = async ({ name, description, icon, color }) => {
@@ -349,6 +375,80 @@ export function AdminProvider({ children }) {
     }
   };
 
+  const fetchUserDetails = async (id) => {
+    try {
+      const { data } = await apiClient.get(`/admin/users/${id}`);
+      return data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const addUser = async ({ name, email, phone, password, role, isVerified }) => {
+    try {
+      const { data } = await apiClient.post("/admin/users", {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        password,
+        role: role || "buyer",
+        isVerified: isVerified === undefined ? true : Boolean(isVerified),
+      });
+
+      await Promise.all([loadUsers({ page: 1 }), loadUserStats()]);
+      return data.user;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const updateUser = async ({ id, name, email, phone, role, isVerified, password }) => {
+    try {
+      const { data } = await apiClient.put(`/admin/users/${id}`, {
+        name: name?.trim(),
+        email: email?.trim(),
+        phone: phone?.trim(),
+        role,
+        isVerified,
+        password: password || undefined,
+      });
+
+      setUsers((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...data.user } : item)),
+      );
+      await loadUserStats();
+      return data.user;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const setUserStatus = async (id, isActive) => {
+    try {
+      const { data } = await apiClient.patch(`/admin/users/${id}/status`, {
+        isActive,
+      });
+
+      setUsers((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...data.user } : item)),
+      );
+      await loadUserStats();
+      return data.user;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
+  const deleteUser = async (id) => {
+    try {
+      await apiClient.delete(`/admin/users/${id}`);
+      setUsers((prev) => prev.filter((item) => item.id !== id));
+      await Promise.all([loadUsers(), loadUserStats()]);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
   const deleteReview = async (id) => {
     try {
       await apiClient.delete(`/admin/reviews/${id}`);
@@ -365,10 +465,20 @@ export function AdminProvider({ children }) {
       orders,
       categories,
       reviews,
+      users,
+      userStats,
+      usersPagination,
       productPagination,
       orderPagination,
       reviewsPagination,
       orderStatuses: Object.values(ORDER_STATUS_LABELS),
+      loadUsers,
+      loadUserStats,
+      fetchUserDetails,
+      addUser,
+      updateUser,
+      setUserStatus,
+      deleteUser,
       loadStores,
       loadProducts,
       loadOrders,
@@ -394,6 +504,11 @@ export function AdminProvider({ children }) {
       orders,
       categories,
       reviews,
+      users,
+      userStats,
+      usersPagination,
+      loadUsers,
+      loadUserStats,
       productPagination,
       orderPagination,
       reviewsPagination,

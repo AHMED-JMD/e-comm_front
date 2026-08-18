@@ -28,7 +28,7 @@ export default function DataTable({
   if (isLoading) {
     return (
       <div className="flex justify-center py-16 rounded-3xl border border-gray-100 bg-white">
-        <Spinner className="w-9 h-9 border-4 border-blue-200 border-t-blue-600" />
+        <Spinner className="w-9 h-9 border-4 border-pink-200 border-t-pink-600" />
       </div>
     );
   }
@@ -36,7 +36,7 @@ export default function DataTable({
   if (!rows || rows.length === 0) {
     return (
       <div className="text-center py-16 rounded-3xl border-2 border-dashed border-gray-200 bg-white/60">
-        <span className="w-16 h-16 mx-auto mb-4 rounded-3xl bg-blue-50 text-blue-500 flex items-center justify-center">
+        <span className="w-16 h-16 mx-auto mb-4 rounded-3xl bg-pink-50 text-pink-500 flex items-center justify-center">
           {emptyIcon || <FiInbox size={28} />}
         </span>
         <p className="font-bold text-gray-800 mb-1">{emptyTitle}</p>
@@ -73,9 +73,9 @@ export default function DataTable({
                 return (
                   <tr
                     key={key}
-                    className={`group border-b border-gray-50 last:border-0 transition-colors hover:bg-blue-50/40 ${
+                    className={`group border-b border-gray-50 last:border-0 transition-colors hover:bg-pink-50/40 ${
                       index % 2 === 1 ? "bg-gray-50/40" : ""
-                    } ${isExpanded ? "bg-blue-50/60" : ""}`}
+                    } ${isExpanded ? "bg-pink-50/60" : ""}`}
                   >
                     {columns.map((column) => (
                       <td
@@ -91,7 +91,7 @@ export default function DataTable({
                         <button
                           type="button"
                           onClick={() => toggleRow(key)}
-                          className="w-9 h-9 rounded-xl border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+                          className="w-9 h-9 rounded-xl border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-colors"
                           aria-label="تفاصيل"
                         >
                           <FiChevronDown
@@ -114,7 +114,7 @@ export default function DataTable({
             .map((row) => (
               <div
                 key={`${rowKey(row)}-details`}
-                className="border-t border-gray-100 bg-blue-50/30 p-5 animate-fade-up"
+                className="border-t border-gray-100 bg-pink-50/30 p-5 animate-fade-up"
               >
                 {expandedContent(row)}
               </div>
@@ -202,7 +202,7 @@ export function TablePagination({ page, totalPages, onChange }) {
           type="button"
           onClick={() => onChange(page - 1)}
           disabled={page <= 1}
-          className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+          className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 text-gray-700 hover:bg-pink-50 hover:border-pink-200 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
         >
           السابق
         </button>
@@ -210,7 +210,7 @@ export function TablePagination({ page, totalPages, onChange }) {
           type="button"
           onClick={() => onChange(page + 1)}
           disabled={page >= totalPages}
-          className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+          className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 text-gray-700 hover:bg-pink-50 hover:border-pink-200 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
         >
           التالي
         </button>
@@ -229,7 +229,7 @@ export function TableAction({
   children,
 }) {
   const tones = {
-    blue: "border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100",
+    blue: "border-pink-200 text-pink-700 bg-pink-50 hover:bg-pink-100",
     red: "border-red-200 text-red-700 bg-red-50 hover:bg-red-100",
     green: "border-green-200 text-green-700 bg-green-50 hover:bg-green-100",
     gray: "border-gray-200 text-gray-600 bg-gray-50 hover:bg-gray-100",

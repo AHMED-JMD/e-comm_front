@@ -135,9 +135,9 @@ export default function AdminReports() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-200 p-4 bg-blue-50">
-          <p className="text-xs text-blue-700">إجمالي الإيرادات</p>
-          <p className="text-2xl font-bold text-blue-900 mt-2">
+        <div className="rounded-xl border border-gray-200 p-4 bg-pink-50">
+          <p className="text-xs text-pink-700">إجمالي الإيرادات</p>
+          <p className="text-2xl font-bold text-pink-900 mt-2">
             {formatCurrency(summary.totalRevenue)}
           </p>
         </div>

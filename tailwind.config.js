@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./index.html", "./src/**/*.{js,jsx}"],
+  content: ["./index.html", "./admin.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
@@ -129,6 +129,15 @@ export default {
           "0%": { opacity: "0", transform: "translateY(16px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        /* RTL drawer: slides in from the right edge of the screen. */
+        "drawer-in": {
+          "0%": { opacity: "0.6", transform: "translateX(100%)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
@@ -139,6 +148,8 @@ export default {
         float: "float 5s ease-in-out infinite",
         "gradient-x": "gradient-x 6s ease infinite",
         "fade-up": "fade-up 0.6s ease-out both",
+        "fade-in": "fade-in 0.2s ease-out both",
+        "drawer-in": "drawer-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both",
         shimmer: "shimmer 2.5s linear infinite",
       },
       backgroundSize: {

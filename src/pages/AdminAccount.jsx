@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   FiUser,
   FiMail,
@@ -22,11 +21,12 @@ import { useAuth } from "../context/AuthContext";
 import { useAdmin } from "../context/useAdmin";
 import apiClient, { extractApiError } from "../utils/api";
 import { formatDate, getInitials } from "../utils/validators";
+import { storeUrl } from "../utils/host";
 
 function InfoRow({ Icon, label, value, dir }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/70">
-      <span className="w-9 h-9 shrink-0 rounded-xl bg-white border border-gray-100 text-blue-600 flex items-center justify-center">
+      <span className="w-9 h-9 shrink-0 rounded-xl bg-white border border-gray-100 text-pink-600 flex items-center justify-center">
         <Icon size={16} />
       </span>
       <div className="min-w-0">
@@ -299,7 +299,7 @@ export default function AdminAccount() {
                 الاسم
               </label>
               <div className="relative">
-                <FiUser className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+                <FiUser className="absolute top-1/2 -translate-y-1/2 right-4 text-pink-500" />
                 <input
                   type="text"
                   value={profileForm.name}
@@ -320,7 +320,7 @@ export default function AdminAccount() {
                 رقم الهاتف
               </label>
               <div className="relative">
-                <FiPhone className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+                <FiPhone className="absolute top-1/2 -translate-y-1/2 right-4 text-pink-500" />
                 <input
                   type="tel"
                   inputMode="numeric"
@@ -440,12 +440,13 @@ export default function AdminAccount() {
             </button>
           </form>
 
-          <Link
-            to="/account"
+          {/* Buyer-facing pages live on the storefront host now. */}
+          <a
+            href={storeUrl("/account")}
             className="btn-outline w-full block text-center !py-2.5 text-sm"
           >
             عرض طلباتي كمشترٍ
-          </Link>
+          </a>
         </section>
       </div>
     </div>

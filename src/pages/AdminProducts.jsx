@@ -349,7 +349,7 @@ export default function AdminProducts() {
       key: "category",
       header: "القسم",
       render: (product) => (
-        <span className="badge-pill bg-blue-50 text-blue-700">
+        <span className="badge-pill bg-pink-50 text-pink-700">
           {categoryNameById[product.categoryId] || product.category}
         </span>
       ),
@@ -461,7 +461,7 @@ export default function AdminProducts() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
-          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-pink-500" />
           <input
             type="text"
             value={search}
@@ -503,7 +503,7 @@ export default function AdminProducts() {
       )}
 
       {feedback && (
-        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
+        <div className="p-3 rounded-2xl bg-pink-50 border border-pink-100 text-sm text-pink-800">
           {feedback}
         </div>
       )}

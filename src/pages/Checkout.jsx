@@ -14,21 +14,9 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import apiClient, { extractApiError, getImageUrl } from "../utils/api";
 import { formatPrice } from "../utils/validators";
+import { DELIVERY_CITIES } from "../utils/cities";
 
-const CITIES = [
-  "الخرطوم",
-  "أم درمان",
-  "بحري",
-  "مدني",
-  "بورتسودان",
-  "كسلا",
-  "القضارف",
-  "الأبيض",
-  "نيالا",
-  "عطبرة",
-  "دنقلا",
-  "سنار",
-];
+
 
 export default function Checkout() {
   const { items, totalItems, totalPrice, storeGroups, clearCart } = useCart();
@@ -45,13 +33,17 @@ export default function Checkout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [placedOrders, setPlacedOrders] = useState(null);
+  const [shouldSaveShipping, setShouldSaveShipping] = useState(true);
 
-  // The account already knows the buyer's name/phone — prefill and let them edit.
+  // The account already knows the buyer's name/phone and the last shipping
+  // details they used — prefill everything and let them edit.
   useEffect(() => {
     setForm((previous) => ({
       ...previous,
       customerName: previous.customerName || user?.name || "",
       phone: previous.phone || user?.phone || "",
+      shippingCity: previous.shippingCity || user?.shippingCity || "",
+      shippingAddress: previous.shippingAddress || user?.shippingAddress || "",
     }));
   }, [user]);
 
@@ -62,10 +54,38 @@ export default function Checkout() {
   }, [isLoggedIn, navigate]);
 
   const missingProfilePhone = useMemo(() => !user?.phone, [user]);
+  const hasSavedShipping = useMemo(
+    () => Boolean(user?.shippingAddress),
+    [user],
+  );
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((previous) => ({ ...previous, [name]: value }));
+  };
+
+  /**
+   * Stores the shipping details on the account so the next checkout is prefilled.
+   * A failure here must never block an order that already went through.
+   */
+  const saveShippingInfo = async ({ shippingAddress, shippingCity }) => {
+    const isUnchanged =
+      shippingAddress === (user?.shippingAddress || "") &&
+      (shippingCity || "") === (user?.shippingCity || "");
+
+    if (!shouldSaveShipping || isUnchanged) {
+      return;
+    }
+
+    try {
+      const { data } = await apiClient.put("/auth/shipping-info", {
+        shippingAddress,
+        shippingCity: shippingCity || "",
+      });
+      updateUser(data.user);
+    } catch {
+      /* keeping the order is what matters — the address just stays unsaved */
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -108,6 +128,8 @@ export default function Checkout() {
       if (missingProfilePhone && user) {
         updateUser({ ...user, phone });
       }
+
+      await saveShippingInfo({ shippingAddress, shippingCity: form.shippingCity });
 
       setPlacedOrders(data.orders || []);
       clearCart();
@@ -305,7 +327,7 @@ export default function Checkout() {
                   className="input-field"
                 >
                   <option value="">اختر المدينة</option>
-                  {CITIES.map((city) => (
+                  {DELIVERY_CITIES.map((city) => (
                     <option key={city} value={city}>
                       {city}
                     </option>
@@ -329,6 +351,32 @@ export default function Checkout() {
                   className="input-field !rounded-2xl"
                   placeholder="الحي، الشارع، رقم المنزل، أقرب علامة مميزة"
                 />
+
+                {hasSavedShipping && (
+                  <p className="mt-2 text-xs text-blue-700 inline-flex items-center gap-1.5">
+                    <FiCheckCircle />
+                    تم استخدام عنوان الشحن المحفوظ في حسابك، عدّله متى شئت.
+                  </p>
+                )}
+
+                <label className="mt-3 flex items-start gap-3 p-3 rounded-2xl bg-blue-50/60 border border-blue-100 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={shouldSaveShipping}
+                    onChange={(event) =>
+                      setShouldSaveShipping(event.target.checked)
+                    }
+                    className="w-5 h-5 mt-0.5 rounded-md accent-blue-600"
+                  />
+                  <span className="text-sm font-bold text-gray-700">
+                    {hasSavedShipping
+                      ? "تحديث عنوان الشحن المحفوظ ببيانات هذا الطلب"
+                      : "حفظ عنوان الشحن لاستخدامه في طلباتي القادمة"}
+                    <span className="block text-xs font-medium text-gray-500 mt-0.5">
+                      يمكنك تعديله لاحقاً من صفحة الملف الشخصي.
+                    </span>
+                  </span>
+                </label>
               </div>
 
               <div>
@@ -360,7 +408,7 @@ export default function Checkout() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-secondary w-full inline-flex items-center justify-center gap-2"
+              className="btn-primary w-full inline-flex items-center justify-center gap-2"
             >
               {isSubmitting && <Spinner />}
               {isSubmitting ? "جاري تأكيد الطلب..." : "تأكيد الطلب"}

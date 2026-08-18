@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { FiMapPin, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import apiClient from "../utils/api";
+import apiClient, { extractApiError } from "../utils/api";
+import { DELIVERY_CITIES } from "../utils/cities";
 
 export default function Profile() {
   const { user, isLoggedIn, updateUser } = useAuth();
@@ -14,10 +16,23 @@ export default function Profile() {
     phone: user?.phone || "",
   });
 
+  /* Saved shipping details — checkout prefills itself from these. */
+  const [isEditingShipping, setIsEditingShipping] = useState(false);
+  const [isSavingShipping, setIsSavingShipping] = useState(false);
+  const [shippingMessage, setShippingMessage] = useState(null);
+  const [shippingForm, setShippingForm] = useState({
+    shippingCity: user?.shippingCity || "",
+    shippingAddress: user?.shippingAddress || "",
+  });
+
   useEffect(() => {
     setForm({
       name: user?.name || "",
       phone: user?.phone || "",
+    });
+    setShippingForm({
+      shippingCity: user?.shippingCity || "",
+      shippingAddress: user?.shippingAddress || "",
     });
   }, [user]);
 
@@ -86,6 +101,69 @@ export default function Profile() {
       );
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleShippingChange = (event) => {
+    const { name, value } = event.target;
+    setShippingForm((previous) => ({ ...previous, [name]: value }));
+    setShippingMessage(null);
+  };
+
+  const saveShipping = async (payload) => {
+    try {
+      setIsSavingShipping(true);
+      const { data } = await apiClient.put("/auth/shipping-info", payload);
+
+      if (data?.user) {
+        updateUser(data.user);
+      }
+
+      setIsEditingShipping(false);
+      return data;
+    } catch (error) {
+      setShippingMessage({
+        type: "error",
+        text: extractApiError(error, "تعذر حفظ بيانات الشحن"),
+      });
+      return null;
+    } finally {
+      setIsSavingShipping(false);
+    }
+  };
+
+  const handleShippingSubmit = async (event) => {
+    event.preventDefault();
+
+    const shippingAddress = shippingForm.shippingAddress.trim();
+
+    if (shippingAddress.length < 10) {
+      setShippingMessage({
+        type: "error",
+        text: "يرجى إدخال عنوان تفصيلي (الحي، الشارع، أقرب علامة مميزة).",
+      });
+      return;
+    }
+
+    const saved = await saveShipping({
+      shippingAddress,
+      shippingCity: shippingForm.shippingCity,
+    });
+
+    if (saved) {
+      setShippingMessage({ type: "success", text: "تم حفظ عنوان الشحن" });
+    }
+  };
+
+  const handleShippingClear = async () => {
+    const saved = await saveShipping({
+      shippingAddress: "",
+      shippingCity: "",
+    });
+
+    if (saved) {
+      setShippingForm({ shippingCity: "", shippingAddress: "" });
+      setShippingMessage({ type: "success", text: "تم حذف عنوان الشحن المحفوظ" });
     }
   };
 
@@ -227,6 +305,144 @@ export default function Profile() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Saved shipping details, reused to prefill checkout */}
+        <div className="card shadow-2xl mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3">
+              <span className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center">
+                <FiMapPin size={20} />
+              </span>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">عنوان الشحن</h2>
+                <p className="text-sm text-gray-500">
+                  يُستخدم لتعبئة بيانات الشحن تلقائياً عند إتمام الطلب.
+                </p>
+              </div>
+            </div>
+
+            {!isEditingShipping && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShippingMessage(null);
+                  setIsEditingShipping(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-blue-600/30 text-blue-700 font-bold text-sm hover:bg-blue-50 transition-colors"
+              >
+                <FiEdit2 size={15} />
+                {user?.shippingAddress ? "تعديل" : "إضافة عنوان"}
+              </button>
+            )}
+          </div>
+
+          {shippingMessage && (
+            <div
+              className={`mb-4 p-3 rounded-2xl text-sm font-bold ${
+                shippingMessage.type === "success"
+                  ? "bg-green-50 text-green-700"
+                  : "bg-red-50 text-red-700"
+              }`}
+            >
+              {shippingMessage.text}
+            </div>
+          )}
+
+          {isEditingShipping ? (
+            <form onSubmit={handleShippingSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="shippingCity"
+                  className="block text-sm font-bold text-gray-700 mb-2"
+                >
+                  المدينة
+                </label>
+                <select
+                  id="shippingCity"
+                  name="shippingCity"
+                  value={shippingForm.shippingCity}
+                  onChange={handleShippingChange}
+                  className="input-field"
+                >
+                  <option value="">اختر المدينة</option>
+                  {DELIVERY_CITIES.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="shippingAddress"
+                  className="block text-sm font-bold text-gray-700 mb-2"
+                >
+                  العنوان التفصيلي
+                </label>
+                <textarea
+                  id="shippingAddress"
+                  name="shippingAddress"
+                  rows={3}
+                  value={shippingForm.shippingAddress}
+                  onChange={handleShippingChange}
+                  className="input-field !rounded-2xl"
+                  placeholder="الحي، الشارع، رقم المنزل، أقرب علامة مميزة"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={isSavingShipping}
+                  className="btn-primary !py-2.5 !px-5 text-sm"
+                >
+                  {isSavingShipping ? "جاري الحفظ..." : "حفظ العنوان"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingShipping(false);
+                    setShippingMessage(null);
+                    setShippingForm({
+                      shippingCity: user?.shippingCity || "",
+                      shippingAddress: user?.shippingAddress || "",
+                    });
+                  }}
+                  disabled={isSavingShipping}
+                  className="px-5 py-2.5 rounded-full border-2 border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          ) : user?.shippingAddress ? (
+            <div className="p-4 rounded-2xl bg-gray-50 space-y-2">
+              <p className="text-sm text-gray-500">
+                المدينة:{" "}
+                <span className="font-bold text-gray-900">
+                  {user.shippingCity || "غير محددة"}
+                </span>
+              </p>
+              <p className="text-gray-900 font-semibold leading-relaxed">
+                {user.shippingAddress}
+              </p>
+              <button
+                type="button"
+                onClick={handleShippingClear}
+                disabled={isSavingShipping}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 transition-colors disabled:opacity-60"
+              >
+                <FiTrash2 size={13} />
+                حذف العنوان المحفوظ
+              </button>
+            </div>
+          ) : (
+            <p className="p-4 rounded-2xl bg-gray-50 text-gray-500 text-sm">
+              لا يوجد عنوان محفوظ بعد. أضف عنوانك ليتم تعبئته تلقائياً في كل طلب.
+            </p>
+          )}
         </div>
       </div>
     </div>

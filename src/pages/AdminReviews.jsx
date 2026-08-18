@@ -87,7 +87,7 @@ export default function AdminReviews() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2 relative">
-          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-pink-500" />
           <input
             type="text"
             value={search}
@@ -112,14 +112,14 @@ export default function AdminReviews() {
       </div>
 
       {feedback && (
-        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
+        <div className="p-3 rounded-2xl bg-pink-50 border border-pink-100 text-sm text-pink-800">
           {feedback}
         </div>
       )}
 
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <Spinner className="w-8 h-8 border-4 border-blue-200 border-t-blue-600" />
+          <Spinner className="w-8 h-8 border-4 border-pink-200 border-t-pink-600" />
         </div>
       ) : reviews.length === 0 ? (
         <div className="text-center py-14 border-2 border-dashed border-gray-200 rounded-3xl">
@@ -145,7 +145,7 @@ export default function AdminReviews() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <FiPackage className="text-blue-500" size={22} />
+                      <FiPackage className="text-pink-500" size={22} />
                     )}
                   </span>
 

@@ -61,7 +61,7 @@ function CategoryMultiSelect({ categories, selectedIds, onChange }) {
               className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
                 isSelected
                   ? `bg-gradient-to-l ${palette.gradient} text-white border-transparent shadow-md`
-                  : "bg-white border-gray-200 text-gray-700 hover:border-blue-300"
+                  : "bg-white border-gray-200 text-gray-700 hover:border-pink-300"
               }`}
             >
               <CategoryIconBadge
@@ -296,11 +296,11 @@ export default function AdminStores() {
       render: (store) => (
         <div className="space-y-1">
           <p className="inline-flex items-center gap-1.5 text-gray-700" dir="ltr">
-            <FiPhone size={13} className="text-blue-500" />
+            <FiPhone size={13} className="text-pink-500" />
             {store.phone}
           </p>
           <p className="inline-flex items-center gap-1.5 text-xs text-gray-500">
-            <FiMapPin size={13} className="text-blue-500" />
+            <FiMapPin size={13} className="text-pink-500" />
             {store.address}
           </p>
         </div>
@@ -367,7 +367,7 @@ export default function AdminStores() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <div className="lg:col-span-2 relative">
-          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-pink-500" />
           <input
             type="text"
             value={search}
@@ -402,7 +402,7 @@ export default function AdminStores() {
       </div>
 
       {feedback && (
-        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
+        <div className="p-3 rounded-2xl bg-pink-50 border border-pink-100 text-sm text-pink-800">
           {feedback}
         </div>
       )}

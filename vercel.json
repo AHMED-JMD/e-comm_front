@@ -2,6 +2,11 @@
   "rewrites": [
     {
       "source": "/(.*)",
+      "has": [{ "type": "host", "value": "admin\\..*" }],
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
