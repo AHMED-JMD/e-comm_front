@@ -1,83 +1,110 @@
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiArrowLeft,
   FiShield,
   FiZap,
   FiStar,
-  FiSmartphone,
-  FiShoppingBag,
-  FiBox,
-  FiBook,
-  FiActivity,
-  FiSun,
+  FiSearch,
+  FiTrendingUp,
+  FiAlertCircle,
+  FiRefreshCw,
 } from "react-icons/fi";
-import { useState } from "react";
-import { PRODUCTS } from "../data/products";
+import ProductCard from "../components/ProductCard";
+import ProductReviewsModal from "../components/ProductReviewsModal";
+import Spinner from "../components/Spinner";
+import { CategoryIconBadge } from "../utils/categoryIcons";
 import { useCart } from "../context/CartContext";
+import apiClient from "../utils/api";
 
-const CATEGORIES = [
-  {
-    id: 1,
-    name: "إلكترونيات",
-    icon: FiSmartphone,
-    gradient: "from-blue-600 to-purple-600",
-    count: 124,
-  },
-  {
-    id: 2,
-    name: "الملابس",
-    icon: FiShoppingBag,
-    gradient: "from-purple-600 to-pink-500",
-    count: 89,
-  },
-  {
-    id: 3,
-    name: "الأثاث",
-    icon: FiBox,
-    gradient: "from-amber-500 to-orange-600",
-    count: 45,
-  },
-  {
-    id: 4,
-    name: "الكتب",
-    icon: FiBook,
-    gradient: "from-green-500 to-emerald-600",
-    count: 67,
-  },
-  {
-    id: 5,
-    name: "الرياضة",
-    icon: FiActivity,
-    gradient: "from-red-500 to-pink-600",
-    count: 52,
-  },
-  {
-    id: 6,
-    name: "الجمال",
-    icon: FiSun,
-    gradient: "from-pink-500 to-purple-500",
-    count: 38,
-  },
-];
+/** Shown when the shop API can't be reached, so an outage never looks like "no data". */
+function LoadErrorCard({ onRetry }) {
+  return (
+    <div className="card text-center py-10 max-w-lg mx-auto">
+      <span className="w-16 h-16 mx-auto mb-4 rounded-3xl bg-red-50 text-red-600 flex items-center justify-center">
+        <FiAlertCircle size={30} />
+      </span>
+      <p className="text-gray-800 font-bold mb-1">تعذر الاتصال بالخادم</p>
+      <p className="text-gray-500 text-sm mb-5">
+        تأكد من تشغيل الخادم ثم أعد المحاولة.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="btn-primary inline-flex items-center gap-2"
+      >
+        <FiRefreshCw />
+        إعادة المحاولة
+      </button>
+    </div>
+  );
+}
 
-const FEATURED_PRODUCTS = PRODUCTS.slice(0, 6);
+function StatValue({ value, suffix = "" }) {
+  return (
+    <div className="text-4xl md:text-5xl font-display font-black text-gradient mb-2">
+      {new Intl.NumberFormat("ar-EG").format(value || 0)}
+      {suffix}
+    </div>
+  );
+}
 
 export default function Home() {
   const { addToCart } = useCart();
-  const [filteredProducts, setFilteredProducts] = useState(FEATURED_PRODUCTS);
-  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
-  const handleSearch = (term) => {
-    setSearchTerm(term);
-    if (term.trim() === "") {
-      setFilteredProducts(FEATURED_PRODUCTS);
-    } else {
-      setFilteredProducts(
-        FEATURED_PRODUCTS.filter(
-          (p) => p.name.includes(term) || p.storeName.includes(term),
-        ),
-      );
+  const [categories, setCategories] = useState([]);
+  const [featured, setFeatured] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [reviewProduct, setReviewProduct] = useState(null);
+
+  const loadHome = useCallback(async () => {
+    setIsLoading(true);
+    setHasLoadError(false);
+
+    try {
+      const [categoriesRes, featuredRes, statsRes] = await Promise.all([
+        apiClient.get("/shop/categories"),
+        apiClient.get("/shop/products/featured", { params: { limit: 6 } }),
+        apiClient.get("/shop/stats"),
+      ]);
+
+      setCategories(categoriesRes.data.categories || []);
+      setFeatured(featuredRes.data.products || []);
+      setStats(statsRes.data.stats || null);
+    } catch {
+      setHasLoadError(true);
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadHome();
+  }, [loadHome]);
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const term = searchTerm.trim();
+    navigate(term ? `/browse?search=${encodeURIComponent(term)}` : "/browse");
+  };
+
+  const handleRatingChange = (productId, summary) => {
+    if (!summary) return;
+    setFeatured((prev) =>
+      prev.map((product) =>
+        product.id === productId
+          ? {
+              ...product,
+              ratingAvg: summary.ratingAvg,
+              ratingCount: summary.ratingCount,
+            }
+          : product,
+      ),
+    );
   };
 
   return (
@@ -104,6 +131,24 @@ export default function Home() {
                 تصل بين البائعين والمشترين في بيئة آمنة. ابدأ البيع أو الشراء
                 اليوم
               </p>
+
+              <form
+                onSubmit={handleSearch}
+                className="glass !bg-white/95 rounded-full p-1.5 flex items-center gap-2 mb-6 max-w-lg"
+              >
+                <FiSearch className="text-blue-600 mr-3 shrink-0" size={20} />
+                <input
+                  type="text"
+                  placeholder="ابحث عن منتج أو متجر..."
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  className="flex-1 min-w-0 py-2.5 bg-transparent text-gray-800 focus:outline-none placeholder:text-gray-400"
+                />
+                <button type="submit" className="btn-primary !py-2.5 !px-6">
+                  بحث
+                </button>
+              </form>
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   to="/browse"
@@ -120,6 +165,7 @@ export default function Home() {
                 </Link>
               </div>
             </div>
+
             <div className="hidden md:flex justify-center">
               <div className="relative animate-float">
                 <div className="absolute inset-0 blur-3xl bg-white/30 rounded-full" />
@@ -133,7 +179,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4 bg-mesh-soft">
         <div className="max-w-7xl mx-auto">
           <h2 className="section-title">لماذا اختيار منصتنا؟</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -168,97 +214,90 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Categories Section */}
+      {/* Categories Section — icons defined by the admin */}
       <section className="py-16 px-4 bg-mesh-soft">
         <div className="max-w-7xl mx-auto">
-          <h2 className="section-title">الفئات الرئيسية</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {CATEGORIES.map((category) => {
-              const IconComponent = category.icon;
-              return (
-                <div
+          <h2 className="section-title !mb-4">الفئات الرئيسية</h2>
+          <p className="text-center text-gray-600 mb-10">
+            اختر القسم الذي تبحث فيه وتصفّح منتجاته مباشرة
+          </p>
+
+          {isLoading ? (
+            <div className="flex justify-center py-10">
+              <Spinner className="w-8 h-8 border-4 border-blue-200 border-t-blue-600" />
+            </div>
+          ) : hasLoadError ? (
+            <LoadErrorCard onRetry={loadHome} />
+          ) : categories.length === 0 ? (
+            <p className="text-center text-gray-500">لم يتم تعريف أقسام بعد.</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {categories.map((category) => (
+                <Link
                   key={category.id}
-                  className="card !p-5 text-center hover:-translate-y-2 cursor-pointer group"
+                  to={`/browse?categoryId=${category.id}`}
+                  className="card !p-5 text-center hover:-translate-y-2 group"
                 >
-                  <div
-                    className={`w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br ${category.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}
-                  >
-                    <IconComponent size={26} className="text-white" />
-                  </div>
-                  <h3 className="font-bold text-gray-900 mb-1 text-sm">
+                  <CategoryIconBadge
+                    icon={category.icon}
+                    color={category.color}
+                    size="md"
+                    className="mx-auto mb-3 group-hover:scale-110 transition-transform"
+                  />
+                  <h3 className="font-bold text-gray-900 mb-1 text-sm line-clamp-1">
                     {category.name}
                   </h3>
-                  <p className="text-xs text-gray-500">{category.count} منتج</p>
-                </div>
-              );
-            })}
-          </div>
+                  <p className="text-xs text-gray-500">
+                    {category.productsCount || 0} منتج
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Search Section */}
-      <section className="py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="card !rounded-full !p-2 flex flex-col md:flex-row gap-2 items-center">
-            <input
-              type="text"
-              placeholder="ابحث عن منتج أو متجر..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="flex-1 w-full px-5 py-3 rounded-full focus:outline-none bg-transparent"
-            />
-            <button className="btn-primary w-full md:w-auto">بحث</button>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Products Section */}
+      {/* Top rated products */}
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <h2 className="section-title">المنتجات المميزة</h2>
-          {filteredProducts.length > 0 ? (
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
+            <div>
+              <span className="badge-pill bg-amber-50 text-amber-700 mb-3">
+                <FiTrendingUp size={14} />
+                الأعلى تقييماً من المشترين
+              </span>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight">
+                المنتجات المميزة
+              </h2>
+            </div>
+            <Link to="/browse?sort=rating" className="btn-outline !py-2.5">
+              عرض الكل
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-10">
+              <Spinner className="w-8 h-8 border-4 border-blue-200 border-t-blue-600" />
+            </div>
+          ) : hasLoadError ? (
+            <LoadErrorCard onRetry={loadHome} />
+          ) : featured.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <div
+              {featured.map((product) => (
+                <ProductCard
                   key={product.id}
-                  className="card hover:-translate-y-2 group overflow-hidden"
-                >
-                  <div className="mb-4 relative -mx-6 -mt-6 px-6 pt-6 pb-6 bg-mesh-soft">
-                    <div className="text-7xl text-center drop-shadow-sm group-hover:scale-110 transition-transform">
-                      {product.image}
-                    </div>
-                    <span className="absolute top-4 left-4 badge-pill bg-gradient-to-l from-green-500 to-emerald-600 text-white shadow-glow-green">
-                      {product.status}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-lg mb-1 group-hover:text-blue-700 transition">
-                    {product.name}
-                  </h3>
-                  <p className="text-gray-500 text-sm mb-4">
-                    {product.storeName}
-                  </p>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-2xl font-display font-extrabold text-gradient">
-                      {product.price} ج.م
-                    </span>
-                    <div className="badge-pill bg-amber-50 text-amber-700">
-                      <span>★</span>
-                      <span>{product.rating}</span>
-                    </div>
-                  </div>
-                  <button
-                    className="btn-primary w-full"
-                    onClick={() => addToCart(product)}
-                  >
-                    أضف للسلة
-                  </button>
-                </div>
+                  product={product}
+                  onAddToCart={addToCart}
+                  onOpenReviews={setReviewProduct}
+                />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="text-5xl mb-4">🔍</div>
-              <p className="text-gray-600 text-lg">لم يتم العثور على منتجات</p>
+            <div className="card text-center py-12">
+              <div className="text-5xl mb-4">🛍️</div>
+              <p className="text-gray-600 text-lg">
+                لا توجد منتجات معروضة حالياً.
+              </p>
             </div>
           )}
         </div>
@@ -284,37 +323,36 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Live platform stats */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-4xl md:text-5xl font-display font-black text-gradient mb-2">
-                15,234
-              </div>
+              <StatValue value={stats?.productsCount} />
               <p className="text-gray-600 font-medium">منتج متاح</p>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-display font-black text-gradient mb-2">
-                2,845
-              </div>
-              <p className="text-gray-600 font-medium">بائع موثوق</p>
+              <StatValue value={stats?.storesCount} />
+              <p className="text-gray-600 font-medium">متجر موثوق</p>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-display font-black text-gradient mb-2">
-                48,500
-              </div>
-              <p className="text-gray-600 font-medium">مشتري سعيد</p>
+              <StatValue value={stats?.buyersCount} />
+              <p className="text-gray-600 font-medium">مشتري مسجل</p>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-display font-black text-gradient mb-2">
-                125K
-              </div>
-              <p className="text-gray-600 font-medium">عملية بيع ناجحة</p>
+              <StatValue value={stats?.reviewsCount} />
+              <p className="text-gray-600 font-medium">تقييم منتج</p>
             </div>
           </div>
         </div>
       </section>
+
+      <ProductReviewsModal
+        product={reviewProduct}
+        isOpen={Boolean(reviewProduct)}
+        onClose={() => setReviewProduct(null)}
+        onRatingChange={handleRatingChange}
+      />
     </div>
   );
 }

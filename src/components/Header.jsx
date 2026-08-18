@@ -50,7 +50,8 @@ export default function Header() {
           <div className="hidden md:flex gap-1 items-center bg-white/60 border border-black/[0.04] rounded-full p-1">
             {navLink("/", "الرئيسية")}
             {navLink("/browse", "تصفح")}
-            {isAdmin && navLink("/admin/stores", "بوابة الإدارة", "green")}
+            {isLoggedIn && !isAdmin && navLink("/account", "طلباتي")}
+            {isAdmin && navLink("/admin/orders", "بوابة الإدارة", "green")}
             <a
               href="#"
               className="px-4 py-2 rounded-full font-bold text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition-all whitespace-nowrap"
@@ -75,14 +76,16 @@ export default function Header() {
             {isLoggedIn ? (
               <>
                 <Link
-                  to="/profile"
+                  to={isAdmin ? "/admin/account" : "/account"}
                   className={`px-4 py-2 rounded-full font-bold text-sm transition-all ${
-                    isActive("/profile")
+                    isActive("/account") ||
+                    isActive("/profile") ||
+                    isActive("/admin/account")
                       ? "bg-blue-600 text-white shadow-glow"
                       : "text-blue-700 border-2 border-blue-600/30 hover:border-blue-600"
                   }`}
                 >
-                  الملف الشخصي
+                  حسابي
                 </Link>
                 <button
                   type="button"
@@ -144,7 +147,7 @@ export default function Header() {
             </Link>
             {isAdmin && (
               <Link
-                to="/admin/stores"
+                to="/admin/orders"
                 className={`block px-4 py-2.5 rounded-2xl font-bold ${
                   isAdminRoute
                     ? "bg-green-600 text-white"
@@ -169,8 +172,14 @@ export default function Header() {
             {isLoggedIn ? (
               <div className="space-y-2 pt-1">
                 <Link
-                  to="/profile"
+                  to={isAdmin ? "/admin/account" : "/account"}
                   className="block px-4 py-2.5 rounded-2xl font-bold text-blue-700 border-2 border-blue-600/30 text-center"
+                >
+                  {isAdmin ? "حسابي" : "حسابي وطلباتي"}
+                </Link>
+                <Link
+                  to="/profile"
+                  className="block px-4 py-2.5 rounded-2xl font-bold text-gray-700 bg-gray-50 text-center"
                 >
                   الملف الشخصي
                 </Link>

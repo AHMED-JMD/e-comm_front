@@ -13,6 +13,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Browse from "./pages/Browse";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import Account from "./pages/Account";
 import Profile from "./pages/Profile";
 import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import { CartProvider } from "./context/CartContext";
@@ -25,6 +27,8 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminOrders from "./pages/AdminOrders";
 import AdminReports from "./pages/AdminReports";
 import AdminCategories from "./pages/AdminCategories";
+import AdminReviews from "./pages/AdminReviews";
+import AdminAccount from "./pages/AdminAccount";
 import "./index.css";
 
 function App() {
@@ -44,6 +48,8 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/browse" element={<Browse />} />
                   <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/account" element={<Account />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -63,13 +69,15 @@ function App() {
                   >
                     <Route
                       index
-                      element={<Navigate to="/admin/categories" replace />}
+                      element={<Navigate to="/admin/orders" replace />}
                     />
                     <Route path="stores" element={<AdminStores />} />
                     <Route path="products" element={<AdminProducts />} />
                     <Route path="orders" element={<AdminOrders />} />
                     <Route path="reports" element={<AdminReports />} />
                     <Route path="categories" element={<AdminCategories />} />
+                    <Route path="reviews" element={<AdminReviews />} />
+                    <Route path="account" element={<AdminAccount />} />
                   </Route>
                 </Routes>
               </main>

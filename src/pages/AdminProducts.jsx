@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+import { FiBox, FiEdit2, FiImage, FiTrash2, FiPlus, FiSearch } from "react-icons/fi";
 import { useAdmin } from "../context/useAdmin";
 import Modal from "../components/Modal";
 import Spinner from "../components/Spinner";
+import { StarRatingDisplay } from "../components/StarRating";
+import DataTable, {
+  TableAction,
+  TablePagination,
+} from "../components/DataTable";
 import { getImageUrl } from "../utils/api";
 
 function formatCurrency(value) {
@@ -61,12 +67,44 @@ export default function AdminProducts() {
     }, {});
   }, [stores]);
 
-  const storeCategoryById = useMemo(() => {
+  /** A store can now belong to several categories — a product picks one of them. */
+  const storeCategoriesById = useMemo(() => {
     return stores.reduce((acc, store) => {
-      acc[store.id] = store.categoryId ? String(store.categoryId) : "";
+      acc[String(store.id)] = store.categories || [];
       return acc;
     }, {});
   }, [stores]);
+
+  /**
+   * Categories offered for a product: the ones its store belongs to, plus the
+   * product's current category so an older assignment never silently vanishes.
+   */
+  const categoryOptionsFor = (storeId, ensureCategoryId) => {
+    const storeCategories = storeCategoriesById[String(storeId)] || [];
+    const options = storeCategories.length > 0 ? storeCategories : categories;
+
+    if (
+      ensureCategoryId &&
+      !options.some((category) => String(category.id) === String(ensureCategoryId))
+    ) {
+      const current = categories.find(
+        (category) => String(category.id) === String(ensureCategoryId),
+      );
+      if (current) return [...options, current];
+    }
+
+    return options;
+  };
+
+  const defaultCategoryFor = (storeId, currentCategoryId) => {
+    const options = categoryOptionsFor(storeId);
+    const stillValid = options.some(
+      (category) => String(category.id) === String(currentCategoryId),
+    );
+
+    if (stillValid) return String(currentCategoryId);
+    return options.length === 1 ? String(options[0].id) : "";
+  };
 
   const categoryNameById = useMemo(() => {
     return categories.reduce((acc, category) => {
@@ -212,7 +250,7 @@ export default function AdminProducts() {
     setProductForm((prev) => ({
       ...prev,
       storeId: nextStoreId,
-      categoryId: storeCategoryById[nextStoreId] || prev.categoryId,
+      categoryId: defaultCategoryFor(nextStoreId, prev.categoryId),
     }));
   };
 
@@ -221,7 +259,7 @@ export default function AdminProducts() {
     setEditForm((prev) => ({
       ...prev,
       storeId: nextStoreId,
-      categoryId: storeCategoryById[nextStoreId] || prev.categoryId,
+      categoryId: defaultCategoryFor(nextStoreId, prev.categoryId),
     }));
   };
 
@@ -274,6 +312,123 @@ export default function AdminProducts() {
     }
   };
 
+  const productColumns = [
+    {
+      key: "product",
+      header: "المنتج",
+      render: (product) => (
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setPreviewProduct(product)}
+            className="w-12 h-12 shrink-0 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center hover:opacity-80 transition-opacity"
+            title="عرض / تغيير الصورة"
+          >
+            {product.image ? (
+              <img
+                src={getImageUrl(product.image)}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <FiImage className="text-gray-400" size={18} />
+            )}
+          </button>
+          <div className="min-w-0">
+            <p className="font-bold text-gray-900 line-clamp-1">
+              {product.name}
+            </p>
+            <p className="text-xs text-gray-500 line-clamp-1">
+              {storeNameById[product.storeId] || "متجر غير محدد"}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "category",
+      header: "القسم",
+      render: (product) => (
+        <span className="badge-pill bg-blue-50 text-blue-700">
+          {categoryNameById[product.categoryId] || product.category}
+        </span>
+      ),
+    },
+    {
+      key: "price",
+      header: "السعر",
+      render: (product) => (
+        <span className="font-display font-black text-gray-900">
+          {formatCurrency(product.price)}
+        </span>
+      ),
+    },
+    {
+      key: "stock",
+      header: "المخزون",
+      render: (product) => {
+        const stock = Number(product.stock);
+        const tone =
+          stock <= 0
+            ? "bg-red-50 text-red-700"
+            : stock <= 5
+              ? "bg-amber-50 text-amber-700"
+              : "bg-green-50 text-green-700";
+
+        return (
+          <span className={`badge-pill ${tone}`}>
+            {stock <= 0 ? "نفدت الكمية" : `${stock} قطعة`}
+          </span>
+        );
+      },
+    },
+    {
+      key: "rating",
+      header: "التقييم",
+      render: (product) =>
+        product.ratingCount > 0 ? (
+          <StarRatingDisplay
+            value={product.ratingAvg}
+            count={product.ratingCount}
+            size="xs"
+          />
+        ) : (
+          <span className="text-xs text-gray-400">لا يوجد تقييم</span>
+        ),
+    },
+    {
+      key: "actions",
+      header: "الإجراءات",
+      render: (product) => (
+        <div className="flex items-center gap-2">
+          <TableAction
+            title="الصورة"
+            tone="gray"
+            onClick={() => setPreviewProduct(product)}
+          >
+            <FiImage size={15} />
+          </TableAction>
+          <TableAction
+            title="تعديل"
+            onClick={() => startEditProduct(product)}
+            disabled={deletingProductId === product.id}
+          >
+            <FiEdit2 size={15} />
+          </TableAction>
+          <TableAction
+            title="حذف"
+            tone="red"
+            loading={deletingProductId === product.id}
+            onClick={() => handleDeleteProduct(product)}
+            disabled={deletingProductId === product.id}
+          >
+            <FiTrash2 size={15} />
+          </TableAction>
+        </div>
+      ),
+    },
+  ];
+
   const goToPage = (nextPage) => {
     loadProducts({
       page: nextPage,
@@ -286,26 +441,35 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-bold text-gray-900">إدارة المنتجات</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">إدارة المنتجات</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            أقسام المنتج تُشتق من أقسام المتجر الذي ينتمي إليه.
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => setIsAddModalOpen(true)}
           disabled={stores.length === 0}
-          className="btn-primary whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary whitespace-nowrap inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          + إضافة منتج جديد
+          <FiPlus />
+          إضافة منتج جديد
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input-field"
-          placeholder="ابحث باسم المنتج أو التصنيف"
-        />
+        <div className="relative">
+          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input-field pr-11"
+            placeholder="ابحث باسم المنتج أو التصنيف"
+          />
+        </div>
         <select
           value={storeFilter}
           onChange={(e) => setStoreFilter(e.target.value)}
@@ -339,123 +503,25 @@ export default function AdminProducts() {
       )}
 
       {feedback && (
-        <div className="p-3 rounded-lg bg-gray-100 border border-gray-200 text-sm text-gray-700">
+        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
           {feedback}
         </div>
       )}
 
-      <section className="border border-gray-200 rounded-xl p-4">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">كل المنتجات</h2>
-
-        {products.length === 0 ? (
-          <p className="text-sm text-gray-500">لا توجد منتجات مطابقة.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-gray-600 border-b border-gray-200">
-                  <th className="text-right py-2">الصورة</th>
-                  <th className="text-right py-2">المنتج</th>
-                  <th className="text-right py-2">المتجر</th>
-                  <th className="text-right py-2">التصنيف</th>
-                  <th className="text-right py-2">السعر</th>
-                  <th className="text-right py-2">المخزون</th>
-                  <th className="text-right py-2">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id} className="border-b border-gray-100">
-                    <td className="py-2">
-                      {product.image ? (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewProduct(product)}
-                          className="block"
-                        >
-                          <img
-                            src={getImageUrl(product.image)}
-                            alt={product.name}
-                            className="w-10 h-10 rounded-md object-cover border border-gray-200 cursor-pointer hover:opacity-80 transition"
-                          />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewProduct(product)}
-                          className="w-10 h-10 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-xs hover:bg-gray-200 transition"
-                        >
-                          —
-                        </button>
-                      )}
-                    </td>
-                    <td className="py-2 text-gray-900">{product.name}</td>
-                    <td className="py-2 text-gray-700">
-                      {storeNameById[product.storeId] || "غير محدد"}
-                    </td>
-                    <td className="py-2 text-gray-700">
-                      {categoryNameById[product.categoryId] || product.category}
-                    </td>
-                    <td className="py-2 text-gray-700">
-                      {formatCurrency(product.price)}
-                    </td>
-                    <td className="py-2 text-gray-700">{product.stock}</td>
-                    <td className="py-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => startEditProduct(product)}
-                          disabled={deletingProductId === product.id}
-                          className="px-3 py-2 text-xs rounded-md border border-blue-300 text-blue-700 bg-blue-50 disabled:opacity-60"
-                        >
-                          تعديل
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteProduct(product)}
-                          disabled={deletingProductId === product.id}
-                          className="px-3 py-2 text-xs rounded-md border border-red-300 text-red-700 bg-red-50 disabled:opacity-60 flex items-center gap-1.5"
-                        >
-                          {deletingProductId === product.id && <Spinner />}
-                          {deletingProductId === product.id
-                            ? "جاري الحذف..."
-                            : "حذف"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-xs text-gray-500">
-                صفحة {productPagination.page} من {productPagination.totalPages}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => goToPage(productPagination.page - 1)}
-                  disabled={productPagination.page <= 1}
-                  className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
-                >
-                  السابق
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goToPage(productPagination.page + 1)}
-                  disabled={
-                    productPagination.page >= productPagination.totalPages
-                  }
-                  className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
-                >
-                  التالي
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
+      <DataTable
+        columns={productColumns}
+        rows={products}
+        emptyTitle="لا توجد منتجات"
+        emptyDescription="لم يتم العثور على منتجات مطابقة للفلاتر الحالية."
+        emptyIcon={<FiBox size={28} />}
+        footer={
+          <TablePagination
+            page={productPagination.page}
+            totalPages={productPagination.totalPages}
+            onChange={goToPage}
+          />
+        }
+      />
 
       <Modal
         isOpen={isAddModalOpen}
@@ -498,7 +564,7 @@ export default function AdminProducts() {
             className="input-field"
           >
             <option value="">اختر القسم</option>
-            {categories.map((category) => (
+            {categoryOptionsFor(productForm.storeId).map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
@@ -658,7 +724,7 @@ export default function AdminProducts() {
             className="input-field"
           >
             <option value="">اختر القسم</option>
-            {categories.map((category) => (
+            {categoryOptionsFor(editForm.storeId, editForm.categoryId).map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>

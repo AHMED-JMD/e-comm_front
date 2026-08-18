@@ -1,7 +1,97 @@
 import { useMemo, useState } from "react";
+import { FiEdit2, FiTrash2, FiPlus, FiSearch } from "react-icons/fi";
 import { useAdmin } from "../context/useAdmin";
 import Modal from "../components/Modal";
 import Spinner from "../components/Spinner";
+import {
+  CATEGORY_COLORS,
+  CATEGORY_ICONS,
+  CategoryIconBadge,
+  DEFAULT_CATEGORY_COLOR,
+  DEFAULT_CATEGORY_ICON,
+  getCategoryColor,
+} from "../utils/categoryIcons";
+
+const EMPTY_FORM = {
+  name: "",
+  description: "",
+  icon: DEFAULT_CATEGORY_ICON,
+  color: DEFAULT_CATEGORY_COLOR,
+};
+
+/** Icon + colour picker shown inside the add/edit category modal. */
+function CategoryAppearancePicker({ value, onChange }) {
+  const palette = getCategoryColor(value.color);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4 p-4 rounded-2xl bg-mesh-soft border border-black/[0.04]">
+        <CategoryIconBadge icon={value.icon} color={value.color} size="lg" />
+        <div className="min-w-0">
+          <p className="text-xs text-gray-500 mb-1">معاينة القسم في الواجهة</p>
+          <p className="font-bold text-gray-900 break-words">
+            {value.name || "اسم القسم"}
+          </p>
+          <p className={`text-xs font-bold ${palette.text}`}>
+            {palette.label}
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-bold text-gray-700 mb-2">لون القسم</p>
+        <div className="flex flex-wrap gap-2">
+          {CATEGORY_COLORS.map((color) => (
+            <button
+              key={color.key}
+              type="button"
+              onClick={() => onChange({ ...value, color: color.key })}
+              title={color.label}
+              className={`w-9 h-9 rounded-xl bg-gradient-to-br ${color.gradient} transition-transform hover:scale-110 ${
+                value.color === color.key
+                  ? "ring-4 ring-offset-2 ring-blue-200 scale-110"
+                  : ""
+              }`}
+              aria-label={color.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-bold text-gray-700 mb-2">
+          أيقونة القسم
+          <span className="font-medium text-gray-400 mr-2 text-xs">
+            (تظهر للمستخدم في الصفحة الرئيسية)
+          </span>
+        </p>
+        <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-56 overflow-y-auto p-2 rounded-2xl border-2 border-gray-100">
+          {CATEGORY_ICONS.map((item) => {
+            const ItemIcon = item.Icon;
+            const isSelected = value.icon === item.key;
+
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => onChange({ ...value, icon: item.key })}
+                title={item.label}
+                className={`aspect-square rounded-xl flex items-center justify-center transition-all ${
+                  isSelected
+                    ? `bg-gradient-to-br ${palette.gradient} text-white shadow-md scale-105`
+                    : "bg-gray-50 text-gray-600 hover:bg-blue-50 hover:text-blue-700"
+                }`}
+                aria-label={item.label}
+              >
+                <ItemIcon size={20} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminCategories() {
   const {
@@ -12,23 +102,21 @@ export default function AdminCategories() {
     updateCategory,
     deleteCategory,
   } = useAdmin();
+
   const [feedback, setFeedback] = useState("");
   const [search, setSearch] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSubmittingCategory, setIsSubmittingCategory] = useState(false);
-  const [editingCategoryId, setEditingCategoryId] = useState(null);
-  const [savingCategoryId, setSavingCategoryId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
-  const [categoryForm, setCategoryForm] = useState({
-    name: "",
-    description: "",
-  });
-  const [editForm, setEditForm] = useState({ name: "", description: "" });
+  const [form, setForm] = useState(EMPTY_FORM);
 
   const usageCountByCategory = useMemo(() => {
     return categories.reduce((acc, category) => {
-      const storesCount = stores.filter(
-        (store) => store.categoryId === category.id,
+      const storesCount = stores.filter((store) =>
+        (store.categories || []).some(
+          (storeCategory) => storeCategory.id === category.id,
+        ),
       ).length;
       const productsCount = products.filter(
         (product) => product.categoryId === category.id,
@@ -39,73 +127,72 @@ export default function AdminCategories() {
   }, [categories, stores, products]);
 
   const filteredCategories = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return categories;
+    const query = search.trim().toLowerCase();
+    if (!query) return categories;
     return categories.filter(
       (category) =>
-        category.name.toLowerCase().includes(q) ||
-        (category.description || "").toLowerCase().includes(q),
+        category.name.toLowerCase().includes(query) ||
+        (category.description || "").toLowerCase().includes(query),
     );
   }, [categories, search]);
 
-  const handleCategorySubmit = async (e) => {
-    e.preventDefault();
+  const openCreateModal = () => {
+    setEditingCategory(null);
+    setForm(EMPTY_FORM);
+    setFeedback("");
+    setIsModalOpen(true);
+  };
 
-    if (!categoryForm.name.trim()) {
+  const openEditModal = (category) => {
+    setEditingCategory(category);
+    setForm({
+      name: category.name,
+      description: category.description || "",
+      icon: category.icon || DEFAULT_CATEGORY_ICON,
+      color: category.color || DEFAULT_CATEGORY_COLOR,
+    });
+    setFeedback("");
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (isSubmitting) return;
+    setIsModalOpen(false);
+    setEditingCategory(null);
+    setForm(EMPTY_FORM);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!form.name.trim()) {
       setFeedback("يرجى إدخال اسم القسم.");
       return;
     }
 
     try {
-      setIsSubmittingCategory(true);
-      await addCategory(categoryForm);
-      setCategoryForm({ name: "", description: "" });
-      setFeedback("تمت إضافة القسم بنجاح.");
-      setIsAddModalOpen(false);
+      setIsSubmitting(true);
+
+      if (editingCategory) {
+        await updateCategory({ id: editingCategory.id, ...form });
+        setFeedback("تم تحديث القسم بنجاح.");
+      } else {
+        await addCategory(form);
+        setFeedback("تمت إضافة القسم بنجاح.");
+      }
+
+      setIsModalOpen(false);
+      setEditingCategory(null);
+      setForm(EMPTY_FORM);
     } catch (error) {
-      setFeedback(error.message || "تعذر إضافة القسم.");
+      setFeedback(error.message || "تعذر حفظ القسم.");
     } finally {
-      setIsSubmittingCategory(false);
-    }
-  };
-
-  const startEdit = (category) => {
-    setEditingCategoryId(category.id);
-    setEditForm({
-      name: category.name,
-      description: category.description || "",
-    });
-    setFeedback("");
-  };
-
-  const cancelEdit = () => {
-    setEditingCategoryId(null);
-    setEditForm({ name: "", description: "" });
-  };
-
-  const saveEdit = async (categoryId) => {
-    if (!editForm.name.trim()) {
-      setFeedback("يرجى إدخال اسم القسم قبل الحفظ.");
-      return;
-    }
-
-    try {
-      setSavingCategoryId(categoryId);
-      await updateCategory({ id: categoryId, ...editForm });
-      setFeedback("تم تحديث القسم بنجاح.");
-      cancelEdit();
-    } catch (error) {
-      setFeedback(error.message || "تعذر تحديث القسم.");
-    } finally {
-      setSavingCategoryId(null);
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteCategory = async (category) => {
-    const confirmed = window.confirm(
-      `هل أنت متأكد من حذف قسم ${category.name}؟`,
-    );
-    if (!confirmed) return;
+    if (!window.confirm(`هل أنت متأكد من حذف قسم ${category.name}؟`)) return;
 
     try {
       setDeletingCategoryId(category.id);
@@ -120,184 +207,165 @@ export default function AdminCategories() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-bold text-gray-900">إدارة الأقسام</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">إدارة الأقسام</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            الأيقونة واللون اللذان تختارهما هنا يظهران مباشرة في الصفحة الرئيسية.
+          </p>
+        </div>
         <button
           type="button"
-          onClick={() => setIsAddModalOpen(true)}
-          className="btn-primary whitespace-nowrap"
+          onClick={openCreateModal}
+          className="btn-primary whitespace-nowrap inline-flex items-center gap-2"
         >
-          + إضافة قسم جديد
+          <FiPlus />
+          إضافة قسم جديد
         </button>
       </div>
 
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="input-field"
-        placeholder="ابحث باسم القسم أو الوصف"
-      />
+      <div className="relative">
+        <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+        <input
+          type="text"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          className="input-field pr-11"
+          placeholder="ابحث باسم القسم أو الوصف"
+        />
+      </div>
 
       {feedback && (
-        <div className="p-3 rounded-lg bg-gray-100 border border-gray-200 text-sm text-gray-700">
+        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
           {feedback}
         </div>
       )}
 
-      <section className="border border-gray-200 rounded-xl p-4">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">كل الأقسام</h2>
+      {filteredCategories.length === 0 ? (
+        <div className="text-center py-14 border-2 border-dashed border-gray-200 rounded-3xl">
+          <div className="text-5xl mb-3">🗂️</div>
+          <p className="text-gray-500">لا توجد أقسام مطابقة.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredCategories.map((category) => {
+            const palette = getCategoryColor(category.color);
+            const usage = usageCountByCategory[category.id] || 0;
 
-        {filteredCategories.length === 0 ? (
-          <p className="text-sm text-gray-500">لا توجد أقسام مطابقة.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-gray-600 border-b border-gray-200">
-                  <th className="text-right py-2">اسم القسم</th>
-                  <th className="text-right py-2">الوصف</th>
-                  <th className="text-right py-2">قيد الاستخدام</th>
-                  <th className="text-right py-2">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCategories.map((category) => {
-                  const isEditing = editingCategoryId === category.id;
-                  return (
-                    <tr key={category.id} className="border-b border-gray-100">
-                      <td className="py-3 text-gray-900 font-medium">
-                        {isEditing ? (
-                          <input
-                            value={editForm.name}
-                            onChange={(e) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                name: e.target.value,
-                              }))
-                            }
-                            className="input-field py-2"
-                          />
-                        ) : (
-                          category.name
-                        )}
-                      </td>
-                      <td className="py-3 text-gray-700">
-                        {isEditing ? (
-                          <input
-                            value={editForm.description}
-                            onChange={(e) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                description: e.target.value,
-                              }))
-                            }
-                            className="input-field py-2"
-                          />
-                        ) : (
-                          category.description || "—"
-                        )}
-                      </td>
-                      <td className="py-3 text-gray-700">
-                        {usageCountByCategory[category.id] || 0}
-                      </td>
-                      <td className="py-3">
-                        <div className="flex items-center gap-2">
-                          {isEditing ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => saveEdit(category.id)}
-                                disabled={savingCategoryId === category.id}
-                                className="px-3 py-2 text-xs rounded-md bg-emerald-600 text-white disabled:opacity-60 flex items-center gap-1.5"
-                              >
-                                {savingCategoryId === category.id && (
-                                  <Spinner />
-                                )}
-                                {savingCategoryId === category.id
-                                  ? "جاري الحفظ..."
-                                  : "حفظ"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={cancelEdit}
-                                disabled={savingCategoryId === category.id}
-                                className="px-3 py-2 text-xs rounded-md border border-gray-300 text-gray-700 disabled:opacity-60"
-                              >
-                                إلغاء
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => startEdit(category)}
-                                disabled={deletingCategoryId === category.id}
-                                className="px-3 py-2 text-xs rounded-md border border-blue-300 text-blue-700 bg-blue-50 disabled:opacity-60"
-                              >
-                                تعديل
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteCategory(category)}
-                                disabled={deletingCategoryId === category.id}
-                                className="px-3 py-2 text-xs rounded-md border border-red-300 text-red-700 bg-red-50 disabled:opacity-60 flex items-center gap-1.5"
-                              >
-                                {deletingCategoryId === category.id && (
-                                  <Spinner className="w-3.5 h-3.5 border-2 border-red-300/40 border-t-red-700" />
-                                )}
-                                {deletingCategoryId === category.id
-                                  ? "جاري الحذف..."
-                                  : "حذف"}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+            return (
+              <article
+                key={category.id}
+                className="relative overflow-hidden rounded-3xl border border-black/[0.04] bg-white shadow-card hover:shadow-card-hover transition-all p-5 group"
+              >
+                <span
+                  className={`absolute -top-10 -left-10 w-28 h-28 rounded-full bg-gradient-to-br ${palette.gradient} opacity-10 group-hover:opacity-20 transition-opacity`}
+                />
+
+                <div className="relative flex items-start gap-4">
+                  <CategoryIconBadge
+                    icon={category.icon}
+                    color={category.color}
+                    size="md"
+                  />
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 break-words">
+                      {category.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 line-clamp-2 mt-1">
+                      {category.description || "بدون وصف"}
+                    </p>
+                    <span
+                      className={`badge-pill ${palette.soft} ${palette.text} mt-3`}
+                    >
+                      {usage} عنصر مرتبط
+                    </span>
+                  </div>
+                </div>
+
+                <div className="relative flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(category)}
+                    disabled={deletingCategoryId === category.id}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-60"
+                  >
+                    <FiEdit2 size={14} />
+                    تعديل
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(category)}
+                    disabled={deletingCategoryId === category.id}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-60"
+                  >
+                    {deletingCategoryId === category.id ? (
+                      <Spinner className="w-3.5 h-3.5 border-2 border-red-300/40 border-t-red-700" />
+                    ) : (
+                      <FiTrash2 size={14} />
+                    )}
+                    حذف
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
       <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => !isSubmittingCategory && setIsAddModalOpen(false)}
-        title="إضافة قسم جديد"
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        size="lg"
+        title={editingCategory ? "تعديل القسم" : "إضافة قسم جديد"}
       >
-        <form onSubmit={handleCategorySubmit} className="space-y-3">
-          <input
-            type="text"
-            value={categoryForm.name}
-            onChange={(e) =>
-              setCategoryForm((prev) => ({ ...prev, name: e.target.value }))
-            }
-            placeholder="اسم القسم"
-            className="input-field"
-          />
-          <textarea
-            value={categoryForm.description}
-            onChange={(e) =>
-              setCategoryForm((prev) => ({
-                ...prev,
-                description: e.target.value,
-              }))
-            }
-            placeholder="الوصف (اختياري)"
-            className="input-field"
-            rows={3}
-          />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-2 text-sm font-bold text-gray-700">
+              اسم القسم *
+            </label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(event) =>
+                setForm((previous) => ({ ...previous, name: event.target.value }))
+              }
+              placeholder="مثال: إلكترونيات"
+              className="input-field"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 text-sm font-bold text-gray-700">
+              الوصف (اختياري)
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(event) =>
+                setForm((previous) => ({
+                  ...previous,
+                  description: event.target.value,
+                }))
+              }
+              placeholder="وصف مختصر يظهر في لوحة الإدارة"
+              className="input-field !rounded-2xl"
+              rows={2}
+            />
+          </div>
+
+          <CategoryAppearancePicker value={form} onChange={setForm} />
 
           <button
             type="submit"
-            disabled={isSubmittingCategory}
-            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+            className="btn-primary w-full disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {isSubmittingCategory && <Spinner />}
-            {isSubmittingCategory ? "جاري الإضافة..." : "إضافة القسم"}
+            {isSubmitting && <Spinner />}
+            {isSubmitting
+              ? "جاري الحفظ..."
+              : editingCategory
+                ? "حفظ التعديلات"
+                : "إضافة القسم"}
           </button>
         </form>
       </Modal>

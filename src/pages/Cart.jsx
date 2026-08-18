@@ -1,6 +1,15 @@
-import { Link } from "react-router-dom";
-import { FiMinus, FiPlus, FiTrash2, FiShoppingBag } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  FiMinus,
+  FiPlus,
+  FiTrash2,
+  FiShoppingBag,
+  FiArrowLeft,
+} from "react-icons/fi";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { CategoryIconBadge } from "../utils/categoryIcons";
+import { getImageUrl } from "../utils/api";
 import { formatPrice } from "../utils/validators";
 
 export default function Cart() {
@@ -12,7 +21,18 @@ export default function Cart() {
     clearCart,
     totalItems,
     totalPrice,
+    storeGroups,
   } = useCart();
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+
+  const goToCheckout = () => {
+    if (!isLoggedIn) {
+      navigate("/login?redirect=/checkout");
+      return;
+    }
+    navigate("/checkout");
+  };
 
   if (items.length === 0) {
     return (
@@ -52,64 +72,93 @@ export default function Cart() {
             </button>
           </div>
 
-          {items.map((item) => (
-            <article key={item.id} className="card">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 shrink-0 rounded-2xl bg-mesh-soft flex items-center justify-center text-4xl">
-                  {item.image}
+          {items.map((item) => {
+            const imageUrl = getImageUrl(item.image);
+            const atStockLimit = item.stock > 0 && item.quantity >= item.stock;
+
+            return (
+              <article key={item.id} className="card">
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 shrink-0 rounded-2xl bg-mesh-soft flex items-center justify-center overflow-hidden">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <CategoryIconBadge
+                        icon={item.categoryIcon}
+                        color={item.categoryColor}
+                        size="md"
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-bold text-gray-900 line-clamp-1">
+                      {item.name}
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {item.storeName}
+                    </p>
+                    {item.categoryName && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        {item.categoryName}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="text-left">
+                    <p className="text-blue-700 font-display font-extrabold text-lg">
+                      {formatPrice(item.price)}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex-1">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    {item.name}
-                  </h2>
-                  <p className="text-sm text-gray-600 mt-1">{item.storeName}</p>
-                  <p className="text-sm text-gray-500 mt-1">{item.status}</p>
-                </div>
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="inline-flex items-center bg-gray-50 rounded-full overflow-hidden w-fit border-2 border-gray-100">
+                    <button
+                      className="px-3.5 py-2 hover:bg-white transition-colors"
+                      onClick={() => decreaseQuantity(item.id)}
+                      aria-label="تقليل الكمية"
+                    >
+                      <FiMinus />
+                    </button>
+                    <span className="px-4 py-2 font-bold min-w-12 text-center">
+                      {item.quantity}
+                    </span>
+                    <button
+                      className="px-3.5 py-2 hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      onClick={() => increaseQuantity(item.id)}
+                      disabled={atStockLimit}
+                      aria-label="زيادة الكمية"
+                    >
+                      <FiPlus />
+                    </button>
+                  </div>
 
-                <div className="text-left">
-                  <p className="text-blue-700 font-display font-extrabold text-lg">
-                    {formatPrice(item.price)}
-                  </p>
+                  <div className="flex items-center justify-between sm:justify-end gap-4">
+                    {atStockLimit && (
+                      <span className="badge-pill bg-amber-50 text-amber-700">
+                        أقصى كمية متاحة
+                      </span>
+                    )}
+                    <p className="font-semibold text-gray-800">
+                      الإجمالي: {formatPrice(item.price * item.quantity)}
+                    </p>
+                    <button
+                      className="text-red-600 hover:text-red-700 inline-flex items-center gap-1 font-medium"
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      <FiTrash2 />
+                      حذف
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="inline-flex items-center bg-gray-50 rounded-full overflow-hidden w-fit border-2 border-gray-100">
-                  <button
-                    className="px-3.5 py-2 hover:bg-white transition-colors"
-                    onClick={() => decreaseQuantity(item.id)}
-                    aria-label="تقليل الكمية"
-                  >
-                    <FiMinus />
-                  </button>
-                  <span className="px-4 py-2 font-bold min-w-12 text-center">
-                    {item.quantity}
-                  </span>
-                  <button
-                    className="px-3.5 py-2 hover:bg-white transition-colors"
-                    onClick={() => increaseQuantity(item.id)}
-                    aria-label="زيادة الكمية"
-                  >
-                    <FiPlus />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-4">
-                  <p className="font-semibold text-gray-800">
-                    الإجمالي: {formatPrice(item.price * item.quantity)}
-                  </p>
-                  <button
-                    className="text-red-600 hover:text-red-700 inline-flex items-center gap-1 font-medium"
-                    onClick={() => removeFromCart(item.id)}
-                  >
-                    <FiTrash2 />
-                    حذف
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </section>
 
         <aside className="card h-fit sticky top-24">
@@ -119,6 +168,10 @@ export default function Cart() {
             <div className="flex items-center justify-between">
               <span>عدد المنتجات</span>
               <span className="font-semibold">{totalItems}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>عدد المتاجر</span>
+              <span className="font-semibold">{storeGroups.length}</span>
             </div>
             <div className="flex items-center justify-between">
               <span>المجموع الفرعي</span>
@@ -132,6 +185,13 @@ export default function Cart() {
             </div>
           </div>
 
+          {storeGroups.length > 1 && (
+            <p className="mt-4 p-3 rounded-xl bg-blue-50 text-blue-700 text-xs leading-relaxed">
+              منتجاتك من {storeGroups.length} متاجر مختلفة، لذلك سيتم إنشاء طلب
+              منفصل لكل متجر ليسهل عليك متابعة كل شحنة.
+            </p>
+          )}
+
           <hr className="my-4 border-gray-100" />
 
           <div className="flex items-center justify-between mb-5">
@@ -143,7 +203,14 @@ export default function Cart() {
             </span>
           </div>
 
-          <button className="btn-secondary w-full mb-3">تأكيد الطلب</button>
+          <button
+            type="button"
+            onClick={goToCheckout}
+            className="btn-secondary w-full mb-3 inline-flex items-center justify-center gap-2"
+          >
+            متابعة إتمام الطلب
+            <FiArrowLeft />
+          </button>
           <Link to="/browse" className="btn-outline w-full block text-center">
             متابعة التسوق
           </Link>

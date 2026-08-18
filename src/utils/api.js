@@ -17,6 +17,20 @@ export function getImageUrl(imagePath) {
   return `${API_ORIGIN}${imagePath}`;
 }
 
+/**
+ * Pulls a human message out of an axios error. The backend answers validation
+ * failures with 422 + `errors[]`, where the useful text lives in `errors[0].msg`
+ * rather than the generic `message`.
+ */
+export function extractApiError(error, fallback = "حدث خطأ غير متوقع") {
+  const data = error?.response?.data;
+  const firstValidationError = Array.isArray(data?.errors)
+    ? data.errors[0]?.msg
+    : null;
+
+  return firstValidationError || data?.message || error?.message || fallback;
+}
+
 // Create axios instance
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

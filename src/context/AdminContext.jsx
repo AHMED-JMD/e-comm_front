@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import apiClient from "../utils/api";
+import apiClient, { extractApiError } from "../utils/api";
 import { useAuth } from "./AuthContext";
 import { AdminContext } from "./useAdmin";
 
@@ -23,9 +23,7 @@ const DEFAULT_PAGINATION = {
 };
 
 function extractErrorMessage(error) {
-  return (
-    error?.response?.data?.message || error?.message || "حدث خطأ غير متوقع"
-  );
+  return extractApiError(error);
 }
 
 function normalizeOrder(rawOrder) {
@@ -46,13 +44,17 @@ export function AdminProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [productPagination, setProductPagination] =
     useState(DEFAULT_PAGINATION);
   const [orderPagination, setOrderPagination] = useState(DEFAULT_PAGINATION);
+  const [reviewsPagination, setReviewsPagination] =
+    useState(DEFAULT_PAGINATION);
   const [productQuery, setProductQuery] = useState({ page: 1, limit: 10 });
   const [orderQuery, setOrderQuery] = useState({ page: 1, limit: 10 });
   const productQueryRef = useRef(productQuery);
   const orderQueryRef = useRef(orderQuery);
+  const reviewQueryRef = useRef({ page: 1, limit: 10 });
 
   const loadStores = useCallback(async () => {
     const { data } = await apiClient.get("/admin/stores");
@@ -62,6 +64,17 @@ export function AdminProvider({ children }) {
   const loadCategories = useCallback(async () => {
     const { data } = await apiClient.get("/admin/categories");
     setCategories(Array.isArray(data.categories) ? data.categories : []);
+  }, []);
+
+  const loadReviews = useCallback(async (nextQuery = {}) => {
+    const mergedQuery = { ...reviewQueryRef.current, ...nextQuery };
+    const { data } = await apiClient.get("/admin/reviews", {
+      params: mergedQuery,
+    });
+
+    setReviews(Array.isArray(data.reviews) ? data.reviews : []);
+    setReviewsPagination(data.pagination || DEFAULT_PAGINATION);
+    reviewQueryRef.current = mergedQuery;
   }, []);
 
   const loadProducts = useCallback(async (nextQuery = {}) => {
@@ -105,6 +118,7 @@ export function AdminProvider({ children }) {
       setProducts([]);
       setOrders([]);
       setCategories([]);
+      setReviews([]);
       return;
     }
 
@@ -113,11 +127,13 @@ export function AdminProvider({ children }) {
       loadProducts({ page: 1 }),
       loadOrders({ page: 1 }),
       loadCategories(),
+      loadReviews({ page: 1 }),
     ]).catch(() => {
       setStores([]);
       setProducts([]);
       setOrders([]);
       setCategories([]);
+      setReviews([]);
     });
   }, [
     isLoggedIn,
@@ -126,13 +142,16 @@ export function AdminProvider({ children }) {
     loadProducts,
     loadOrders,
     loadCategories,
+    loadReviews,
   ]);
 
-  const addCategory = async ({ name, description }) => {
+  const addCategory = async ({ name, description, icon, color }) => {
     try {
       await apiClient.post("/admin/categories", {
         name: name.trim(),
         description: description ? description.trim() : undefined,
+        icon: icon || undefined,
+        color: color || undefined,
       });
       await loadCategories();
     } catch (error) {
@@ -140,11 +159,13 @@ export function AdminProvider({ children }) {
     }
   };
 
-  const updateCategory = async ({ id, name, description }) => {
+  const updateCategory = async ({ id, name, description, icon, color }) => {
     try {
       await apiClient.put(`/admin/categories/${id}`, {
         name: name.trim(),
         description: description ? description.trim() : undefined,
+        icon: icon || undefined,
+        color: color || undefined,
       });
       await loadCategories();
     } catch (error) {
@@ -161,47 +182,34 @@ export function AdminProvider({ children }) {
     }
   };
 
-  const addStore = async ({
+  const buildStorePayload = ({
     name,
     ownerName,
     address,
     description,
     phone,
-    categoryId,
-  }) => {
+    categoryIds,
+  }) => ({
+    name: name.trim(),
+    ownerName: ownerName.trim(),
+    address: address.trim(),
+    description: description ? description.trim() : undefined,
+    phone: phone.trim(),
+    categoryIds: (categoryIds || []).map(Number),
+  });
+
+  const addStore = async (store) => {
     try {
-      await apiClient.post("/admin/stores", {
-        name: name.trim(),
-        ownerName: ownerName.trim(),
-        address: address.trim(),
-        description: description ? description.trim() : undefined,
-        phone: phone.trim(),
-        categoryId: Number(categoryId),
-      });
+      await apiClient.post("/admin/stores", buildStorePayload(store));
       await loadStores();
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   };
 
-  const updateStore = async ({
-    id,
-    name,
-    ownerName,
-    address,
-    description,
-    phone,
-    categoryId,
-  }) => {
+  const updateStore = async ({ id, ...store }) => {
     try {
-      await apiClient.put(`/admin/stores/${id}`, {
-        name: name.trim(),
-        ownerName: ownerName.trim(),
-        address: address.trim(),
-        description: description ? description.trim() : undefined,
-        phone: phone.trim(),
-        categoryId: Number(categoryId),
-      });
+      await apiClient.put(`/admin/stores/${id}`, buildStorePayload(store));
       await loadStores();
     } catch (error) {
       throw new Error(extractErrorMessage(error));
@@ -341,19 +349,32 @@ export function AdminProvider({ children }) {
     }
   };
 
+  const deleteReview = async (id) => {
+    try {
+      await apiClient.delete(`/admin/reviews/${id}`);
+      await loadReviews();
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  };
+
   const value = useMemo(
     () => ({
       stores,
       products,
       orders,
       categories,
+      reviews,
       productPagination,
       orderPagination,
+      reviewsPagination,
       orderStatuses: Object.values(ORDER_STATUS_LABELS),
       loadStores,
       loadProducts,
       loadOrders,
       loadCategories,
+      loadReviews,
+      deleteReview,
       addStore,
       updateStore,
       deleteStore,
@@ -372,12 +393,16 @@ export function AdminProvider({ children }) {
       products,
       orders,
       categories,
+      reviews,
       productPagination,
       orderPagination,
+      reviewsPagination,
       loadStores,
       loadProducts,
       loadOrders,
       loadCategories,
+      loadReviews,
+      deleteReview,
       addStore,
       updateStore,
       deleteStore,

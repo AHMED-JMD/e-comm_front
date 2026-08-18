@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  FiMapPin,
+  FiPhone,
+  FiPackage,
+  FiSearch,
+  FiShoppingCart,
+  FiUser,
+} from "react-icons/fi";
 import { useAdmin } from "../context/useAdmin";
+import DataTable, { TablePagination } from "../components/DataTable";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("ar-EG", {
@@ -84,20 +93,168 @@ export default function AdminOrders() {
     }
   };
 
+  const columns = [
+    {
+      key: "order",
+      header: "الطلب",
+      render: (order) => (
+        <div className="flex items-center gap-3">
+          <span className="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center shadow-sm">
+            <FiShoppingCart size={17} />
+          </span>
+          <div className="min-w-0">
+            <p className="font-bold text-gray-900 line-clamp-1">{order.id}</p>
+            <p className="text-xs text-gray-500 line-clamp-1">
+              {storeNameById[order.storeId] || "متجر غير محدد"}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "customer",
+      header: "العميل",
+      render: (order) => (
+        <div className="min-w-0">
+          <p className="font-medium text-gray-900 line-clamp-1">
+            {order.customerName}
+          </p>
+          {order.customerPhone && (
+            <p className="text-xs text-gray-500" dir="ltr">
+              {order.customerPhone}
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "total",
+      header: "القيمة",
+      render: (order) => (
+        <div>
+          <p className="font-display font-black text-gray-900">
+            {formatCurrency(order.total)}
+          </p>
+          <p className="text-xs text-gray-500">{order.itemsCount} منتج</p>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "الحالة",
+      render: (order) => (
+        <span
+          className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${statusBadgeClasses(order.status)}`}
+        >
+          {order.status}
+        </span>
+      ),
+    },
+    {
+      key: "update",
+      header: "تحديث الحالة",
+      render: (order) => (
+        <select
+          value={order.status}
+          onChange={(event) => handleStatusChange(order, event.target.value)}
+          className="px-3 py-2 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-600/10 transition-all"
+        >
+          {orderStatuses.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+  ];
+
+  const renderOrderDetails = (order) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="p-3 rounded-2xl bg-white border border-gray-100">
+          <p className="text-xs text-gray-500 mb-1 inline-flex items-center gap-1.5">
+            <FiUser size={13} />
+            المستلم
+          </p>
+          <p className="font-semibold text-gray-900">{order.customerName}</p>
+        </div>
+
+        <div className="p-3 rounded-2xl bg-white border border-gray-100">
+          <p className="text-xs text-gray-500 mb-1 inline-flex items-center gap-1.5">
+            <FiPhone size={13} />
+            هاتف التواصل
+          </p>
+          <p className="font-semibold text-gray-900" dir="ltr">
+            {order.customerPhone || order.customer?.phone || "—"}
+          </p>
+        </div>
+
+        <div className="p-3 rounded-2xl bg-white border border-gray-100">
+          <p className="text-xs text-gray-500 mb-1 inline-flex items-center gap-1.5">
+            <FiMapPin size={13} />
+            عنوان الشحن
+          </p>
+          <p className="font-semibold text-gray-900">
+            {[order.shippingCity, order.shippingAddress]
+              .filter(Boolean)
+              .join(" — ") || "لم يتم إدخال عنوان"}
+          </p>
+        </div>
+      </div>
+
+      {order.items?.length > 0 && (
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {order.items.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-gray-100"
+            >
+              <span className="inline-flex items-center gap-2 text-gray-800 font-medium">
+                <FiPackage className="text-blue-500" />
+                {item.productName}
+              </span>
+              <span className="text-gray-600 text-xs">
+                {item.quantity} × {formatCurrency(item.unitPrice)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {order.notes && (
+        <p className="p-3 rounded-2xl bg-blue-50 text-blue-800 text-xs">
+          <span className="font-bold">ملاحظات العميل: </span>
+          {order.notes}
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold text-gray-900">إدارة الطلبات</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          افتح تفاصيل أي طلب لرؤية عنوان الشحن ورقم التواصل والمنتجات.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input-field"
-          placeholder="ابحث برقم الطلب أو اسم العميل"
-        />
+        <div className="relative">
+          <FiSearch className="absolute top-1/2 -translate-y-1/2 right-4 text-blue-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="input-field pr-11"
+            placeholder="ابحث برقم الطلب أو العميل أو الهاتف"
+          />
+        </div>
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(event) => setStatusFilter(event.target.value)}
           className="input-field"
         >
           <option value="all">كل الحالات</option>
@@ -110,7 +267,7 @@ export default function AdminOrders() {
 
         <select
           value={storeFilter}
-          onChange={(e) => setStoreFilter(e.target.value)}
+          onChange={(event) => setStoreFilter(event.target.value)}
           className="input-field"
         >
           <option value="all">كل المتاجر</option>
@@ -122,98 +279,27 @@ export default function AdminOrders() {
         </select>
       </div>
 
-      <section className="border border-gray-200 rounded-xl p-4">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">كل الطلبات</h2>
+      {feedback && (
+        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
+          {feedback}
+        </div>
+      )}
 
-        {orders.length === 0 ? (
-          <p className="text-sm text-gray-500">لا توجد طلبات مطابقة.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-gray-600 border-b border-gray-200">
-                  <th className="text-right py-2">رقم الطلب</th>
-                  <th className="text-right py-2">المتجر</th>
-                  <th className="text-right py-2">العميل</th>
-                  <th className="text-right py-2">القيمة</th>
-                  <th className="text-right py-2">عدد المنتجات</th>
-                  <th className="text-right py-2">الحالة الحالية</th>
-                  <th className="text-right py-2">تحديث الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id} className="border-b border-gray-100">
-                    <td className="py-3 text-gray-900 font-medium">
-                      {order.id}
-                    </td>
-                    <td className="py-3 text-gray-700">
-                      {storeNameById[order.storeId] || "غير محدد"}
-                    </td>
-                    <td className="py-3 text-gray-700">{order.customerName}</td>
-                    <td className="py-3 text-gray-700">
-                      {formatCurrency(order.total)}
-                    </td>
-                    <td className="py-3 text-gray-700">{order.itemsCount}</td>
-                    <td className="py-3">
-                      <span
-                        className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeClasses(order.status)}`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <select
-                        value={order.status}
-                        onChange={(e) =>
-                          handleStatusChange(order, e.target.value)
-                        }
-                        className="input-field py-2"
-                      >
-                        {orderStatuses.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-xs text-gray-500">
-                صفحة {orderPagination.page} من {orderPagination.totalPages}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => goToPage(orderPagination.page - 1)}
-                  disabled={orderPagination.page <= 1}
-                  className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
-                >
-                  السابق
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goToPage(orderPagination.page + 1)}
-                  disabled={orderPagination.page >= orderPagination.totalPages}
-                  className="px-3 py-2 text-sm rounded-md border border-gray-300 disabled:opacity-50"
-                >
-                  التالي
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {feedback && (
-          <div className="mt-3 p-3 rounded-lg bg-gray-100 border border-gray-200 text-sm text-gray-700">
-            {feedback}
-          </div>
-        )}
-      </section>
+      <DataTable
+        columns={columns}
+        rows={orders}
+        expandedContent={renderOrderDetails}
+        emptyTitle="لا توجد طلبات"
+        emptyDescription="لم يتم العثور على طلبات مطابقة للفلاتر الحالية."
+        emptyIcon={<FiShoppingCart size={28} />}
+        footer={
+          <TablePagination
+            page={orderPagination.page}
+            totalPages={orderPagination.totalPages}
+            onChange={goToPage}
+          />
+        }
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiEye, FiEyeOff, FiPhone, FiLock } from "react-icons/fi";
 import apiClient, { API_BASE_URL } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
@@ -44,6 +44,10 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Pages that require auth (cart checkout, account portal) send users here with
+  // ?redirect=... so they land back where they left off.
+  const redirectTo = searchParams.get("redirect") || "/";
 
   const handleGoogleAuth = () => {
     window.location.href = `${API_BASE_URL}/auth/google`;
@@ -117,12 +121,12 @@ export default function Login() {
         isOpen: true,
         type: "success",
         title: `مرحباً ${data.user?.name || "بك"}`,
-        message: "تم تسجيل الدخول بنجاح. سيتم تحويلك إلى الصفحة الرئيسية.",
+        message: "تم تسجيل الدخول بنجاح، سيتم تحويلك خلال لحظات.",
         tips: ["يمكنك الآن تصفح المنتجات وإتمام الطلبات."],
       });
       setIsRedirecting(true);
       await new Promise((resolve) => window.setTimeout(resolve, 1700));
-      navigate("/");
+      navigate(redirectTo);
     } catch (error) {
       setStatusModal((prev) => ({ ...prev, isOpen: false }));
       setErrors(extractBackendErrors(error));
@@ -179,7 +183,7 @@ export default function Login() {
                   name="identifier"
                   value={formData.identifier}
                   onChange={handleInputChange}
-                  placeholder="name@example.com / 01012345678"
+                  placeholder="name@example.com / 0112345678"
                   className={`input-field pr-10 ${errors.identifier ? "border-red-500 focus:ring-red-500" : ""}`}
                 />
               </div>
