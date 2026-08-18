@@ -1,7 +1,8 @@
 import axios from "axios";
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://e-comm-backend-tan.vercel.app/api";
+  import.meta.env.VITE_API_URL || "http://localhost:5050/api";
+// "https://e-comm-backend-tan.vercel.app/api";
 // export const API_BASE_URL = "http://localhost:5050/api"; // Uncomment for local development
 
 // Origin (no /api suffix) used to resolve static assets like uploaded images

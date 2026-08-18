@@ -13,6 +13,7 @@ import apiClient, { extractApiError } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { storeUrl } from "../utils/host";
 import Spinner from "../components/Spinner";
+import Logo, { LogoMark } from "../components/Logo";
 
 const HIGHLIGHTS = [
   "متابعة الطلبات وتحديث حالتها لحظياً",
@@ -82,14 +83,14 @@ export default function AdminLogin() {
           <div className="blob w-72 h-72 bg-white/20 -top-16 -left-10" />
 
           <div className="relative flex items-center gap-3">
-            <span className="w-12 h-12 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-sm flex items-center justify-center font-display font-black text-xl">
-              ل
+            <span className="w-12 h-12 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-sm flex items-center justify-center">
+              <LogoMark height={20} tone="onDark" />
             </span>
             <div>
-              <p className="font-display font-black text-lg leading-tight">
-                لُوما
+              <Logo height={19} tone="onDark" showArabic={false} showTagline={false} />
+              <p className="text-white/60 text-xs font-bold mt-0.5">
+                لوحة التحكم
               </p>
-              <p className="text-white/60 text-xs font-bold">لوحة التحكم</p>
             </div>
           </div>
 

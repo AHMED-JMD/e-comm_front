@@ -16,6 +16,7 @@ import { useCart } from "../context/CartContext";
 import { adminUrl } from "../utils/host";
 import { useAuth } from "../context/AuthContext";
 import { getInitials } from "../utils/validators";
+import Logo from "./Logo";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -102,16 +103,13 @@ export default function Header() {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-glow group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
-                <span className="text-white font-display font-black text-xl">
-                  ل
-                </span>
-                <span className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-blue-600 to-pink-500 opacity-40 blur-md -z-10" />
-              </div>
-              <span className="hidden sm:inline text-xl font-display font-extrabold text-gradient">
-                لُوما
-              </span>
+            <Link to="/" className="flex items-center group" aria-label="لُوما">
+              <Logo
+                height={26}
+                showLatin
+                showArabic
+                className="group-hover:opacity-80 transition-opacity"
+              />
             </Link>
 
             {/* Desktop Navigation */}
@@ -236,15 +234,8 @@ export default function Header() {
           >
             {/* Drawer header */}
             <div className="flex items-center justify-between gap-3 p-4 border-b border-blue-100/70">
-              <Link to="/" className="flex items-center gap-2.5">
-                <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center">
-                  <span className="text-white font-display font-black text-lg">
-                    ل
-                  </span>
-                </span>
-                <span className="text-lg font-display font-extrabold text-gradient">
-                  لُوما
-                </span>
+              <Link to="/" className="flex items-center" aria-label="لُوما">
+                <Logo height={22} />
               </Link>
 
               <button

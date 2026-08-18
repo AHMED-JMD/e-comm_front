@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Logo from "./Logo";
 import { FiFacebook, FiTwitter, FiInstagram, FiMail } from "react-icons/fi";
 
 export default function Footer() {
@@ -11,13 +12,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           {/* About */}
           <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-glow">
-                <span className="text-white font-display font-black">ل</span>
-              </div>
-              <span className="text-lg font-display font-extrabold text-white">
-                لُوما
-              </span>
+            <div className="flex items-center mb-4">
+              <Logo height={24} tone="onDark" />
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
               منصة تجارة إلكترونية آمنة وموثوقة لربط البائعين بالمشترين

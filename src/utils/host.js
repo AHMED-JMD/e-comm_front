@@ -31,7 +31,7 @@ export function isAdminHost(hostname = currentLocation().hostname) {
     }
   }
 
-  return hostname.startsWith(`${ADMIN_SUBDOMAIN}.`);
+  return baseDomain(hostname).startsWith(`${ADMIN_SUBDOMAIN}.`);
 }
 
 /**
@@ -48,6 +48,15 @@ export function isAdminEntry() {
   );
 }
 
+/**
+ * `www.` belongs to the storefront only — the dashboard sits on the bare
+ * domain, so `www.luma-sd.com` must yield `admin.luma-sd.com`, never
+ * `admin.www.luma-sd.com`.
+ */
+function baseDomain(hostname) {
+  return hostname.replace(/^www\./i, "");
+}
+
 function buildOrigin(hostname) {
   const { protocol, port } = currentLocation();
   return `${protocol}//${hostname}${port ? `:${port}` : ""}`;
@@ -62,7 +71,7 @@ export function storeOrigin() {
   const { hostname, origin } = currentLocation();
 
   if (isAdminHost(hostname)) {
-    return buildOrigin(hostname.slice(ADMIN_SUBDOMAIN.length + 1));
+    return buildOrigin(baseDomain(hostname).slice(ADMIN_SUBDOMAIN.length + 1));
   }
 
   return stripTrailingSlash(origin);
@@ -80,7 +89,7 @@ export function adminOrigin() {
     return stripTrailingSlash(origin);
   }
 
-  return buildOrigin(`${ADMIN_SUBDOMAIN}.${hostname}`);
+  return buildOrigin(`${ADMIN_SUBDOMAIN}.${baseDomain(hostname)}`);
 }
 
 export function storeUrl(path = "/") {

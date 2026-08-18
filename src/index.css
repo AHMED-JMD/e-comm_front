@@ -22,8 +22,8 @@ body {
 }
 
 ::selection {
-  background: #5b3de8;
-  color: #fff;
+  background: #788b45;
+  color: #faf8f2;
 }
 
 /* Slim, modern scrollbar */
@@ -35,9 +35,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #5b3de8, #e721a6);
+  background: linear-gradient(180deg, #788b45, #4a3b2a);
   border-radius: 999px;
-  border: 2px solid #fbfaff;
+  border: 2px solid #faf8f2;
 }
 
 /* Custom utility classes */

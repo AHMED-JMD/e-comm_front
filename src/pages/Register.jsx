@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff, FiLock, FiUser, FiPhone } from "react-icons/fi";
 import apiClient, { API_BASE_URL } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../components/Logo";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -151,9 +152,12 @@ export default function Register() {
       <div className="max-w-2xl mx-auto">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 rounded-2xl flex items-center justify-center shadow-glow">
-            <span className="text-white font-bold text-2xl">ل</span>
-          </div>
+          <Logo
+            height={26}
+            showLatin
+            showArabic
+            className="group-hover:opacity-80 transition-opacity"
+          />
         </div>
 
         {/* Registration Card */}

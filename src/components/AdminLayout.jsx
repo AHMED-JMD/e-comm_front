@@ -17,21 +17,20 @@ import { useAuth } from "../context/AuthContext";
 import { storeUrl } from "../utils/host";
 import { getInitials } from "../utils/validators";
 import { ADMIN_GROUPS, findActiveSection } from "../utils/adminSections";
+import Logo, { LogoIcon } from "./Logo";
 
 const COLLAPSE_KEY = "adminSidebarCollapsed";
 
 function Brand({ isCollapsed }) {
   return (
     <div className="flex items-center gap-3 px-2">
-      <span className="relative w-11 h-11 shrink-0 rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-glow-pink">
-        <span className="text-white font-display font-black text-xl">ل</span>
-      </span>
+      <LogoIcon size={44} radius="1rem" className="shadow-glow" />
       {!isCollapsed && (
         <div className="min-w-0">
-          <p className="font-display font-black text-gray-900 leading-tight">
-            لُوما
+          <Logo height={19} showArabic={false} showTagline={false} />
+          <p className="text-[11px] text-gray-400 font-bold mt-0.5">
+            لوحة التحكم
           </p>
-          <p className="text-[11px] text-gray-400 font-bold">لوحة التحكم</p>
         </div>
       )}
     </div>

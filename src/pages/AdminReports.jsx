@@ -11,14 +11,14 @@ function formatCurrency(value) {
 
 function getStatusColor(status) {
   if (status === "تم الاستلام") {
-    return "#16a34a";
+    return "#2E8760";
   }
 
   if (status === "تم الشحن") {
-    return "#2563eb";
+    return "#788B45";
   }
 
-  return "#d97706";
+  return "#B8822C";
 }
 
 export default function AdminReports() {

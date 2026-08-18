@@ -123,7 +123,7 @@ export default function Home() {
               </span>
               <h1 className="text-4xl md:text-6xl font-display font-black mb-6 leading-[1.15]">
                 منصة تجارة إلكترونية
-                <span className="block text-transparent bg-clip-text bg-gradient-to-l from-white to-green-200">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-l from-canvas to-pink-200">
                   آمنة، سريعة، وموثوقة
                 </span>
               </h1>
