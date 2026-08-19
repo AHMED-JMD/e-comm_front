@@ -87,7 +87,7 @@ export default function AdminLogin() {
               <LogoMark height={20} tone="onDark" />
             </span>
             <div>
-              <Logo height={19} tone="onDark" showArabic={false} showTagline={false} />
+              <Logo height={19} tone="onDark" showArabic={false} showFlag={false} />
               <p className="text-white/60 text-xs font-bold mt-0.5">
                 لوحة التحكم
               </p>

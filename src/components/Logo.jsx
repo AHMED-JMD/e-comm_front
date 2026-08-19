@@ -6,6 +6,25 @@
 
 const TRIANGLE = { clipPath: "polygon(50% 0, 100% 100%, 0 100%)" };
 
+/** Small Sudan flag — the badge that sits under the wordmark. */
+export function SudanFlag({ width = 20, className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 18 9"
+      width={width}
+      height={width / 2}
+      className={`shrink-0 rounded-[1px] ring-1 ring-black/10 ${className}`}
+      role="img"
+      aria-label="السودان"
+    >
+      <rect width="18" height="3" fill="#D21034" />
+      <rect y="3" width="18" height="3" fill="#FFFFFF" />
+      <rect y="6" width="18" height="3" fill="#000000" />
+      <path d="M0 0 L7 4.5 L0 9 Z" fill="#007229" />
+    </svg>
+  );
+}
+
 /** Bare pyramid mark — used on its own for icons and favicons. */
 export function LogoMark({ height = 22, tone = "brand", className = "" }) {
   const side = {
@@ -32,7 +51,8 @@ export function LogoMark({ height = 22, tone = "brand", className = "" }) {
 }
 
 /**
- * Horizontal lockup: mark + LUMA + لُوما, the compact form from the brand sheet.
+ * Horizontal lockup: mark + LUMA + لُوما over a small Sudan flag, the compact
+ * form from the brand sheet.
  * `tone="onDark"` swaps in the sand/off-white pair for dark surfaces.
  */
 export default function Logo({
@@ -40,15 +60,14 @@ export default function Logo({
   tone = "brand",
   showArabic = true,
   showLatin = true,
-  showTagline = true,
+  showFlag = true,
   className = "",
 }) {
   const latinSize = Math.round(height * 0.75);
   const arabicSize = Math.round(height * 0.72);
-  const taglineSize = Math.max(9, Math.round(height * 0.34));
+  const flagWidth = Math.max(14, Math.round(height * 0.9));
   const textColor = tone === "onDark" ? "text-canvas" : "text-ink";
   const arabicColor = tone === "onDark" ? "text-pink-200" : "text-ink";
-  const taglineColor = tone === "onDark" ? "text-pink-200/80" : "text-blue-600";
 
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
@@ -80,15 +99,7 @@ export default function Logo({
           )}
         </span>
 
-        {showTagline && (
-          <span
-            dir="rtl"
-            className={`font-bold leading-none ${taglineColor}`}
-            style={{ fontSize: taglineSize, letterSpacing: "0.08em" }}
-          >
-            متجر سوداني
-          </span>
-        )}
+        {showFlag && <SudanFlag width={flagWidth} />}
       </span>
     </span>
   );

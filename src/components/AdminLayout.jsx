@@ -27,7 +27,7 @@ function Brand({ isCollapsed }) {
       <LogoIcon size={44} radius="1rem" className="shadow-glow" />
       {!isCollapsed && (
         <div className="min-w-0">
-          <Logo height={19} showArabic={false} showTagline={false} />
+          <Logo height={19} showArabic={false} showFlag={false} />
           <p className="text-[11px] text-gray-400 font-bold mt-0.5">
             لوحة التحكم
           </p>
