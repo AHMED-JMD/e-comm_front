@@ -40,9 +40,9 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-pink-400 transition">
+                <Link to="/contact" className="hover:text-pink-400 transition">
                   اتصل بنا
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -78,7 +78,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-bold mb-4">تابعنا</h3>
             <div className="flex gap-3">
-              {[FiFacebook, FiTwitter, FiInstagram, FiMail].map((Icon, i) => (
+              {[FiFacebook, FiTwitter, FiInstagram].map((Icon, i) => (
                 <a
                   key={i}
                   href="#"
@@ -87,6 +87,13 @@ export default function Footer() {
                   <Icon size={18} />
                 </a>
               ))}
+              <Link
+                to="/contact"
+                aria-label="تواصل معنا"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-gradient-to-br hover:from-blue-600 hover:to-pink-500 hover:-translate-y-1 transition-all"
+              >
+                <FiMail size={18} />
+              </Link>
             </div>
           </div>
         </div>

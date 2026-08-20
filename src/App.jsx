@@ -17,6 +17,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Account from "./pages/Account";
 import Profile from "./pages/Profile";
+import Contact from "./pages/Contact";
 import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -68,6 +69,7 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route
                   path="/auth/google/callback"
                   element={<GoogleAuthCallback />}

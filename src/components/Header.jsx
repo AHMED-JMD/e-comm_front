@@ -56,12 +56,17 @@ export default function Header() {
   const drawerLink = ({ to, href, label, Icon, badge }) => {
     const active = to ? isActive(to) : false;
     const className = `flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-colors ${
-      active ? "bg-white text-blue-700 shadow-card" : "text-gray-700 active:bg-white/70"
+      active
+        ? "bg-white text-blue-700 shadow-card"
+        : "text-gray-700 active:bg-white/70"
     }`;
 
     const content = (
       <>
-        <Icon size={19} className={active ? "text-blue-600" : "text-gray-400"} />
+        <Icon
+          size={19}
+          className={active ? "text-blue-600" : "text-gray-400"}
+        />
         <span className="flex-1 text-right">{label}</span>
         {badge > 0 && (
           <span className="min-w-[1.5rem] h-6 px-1.5 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center">
@@ -127,10 +132,10 @@ export default function Header() {
                 </a>
               )}
               <a
-                href="#"
+                href="/contact"
                 className="px-4 py-2 rounded-full font-bold text-sm text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition-all whitespace-nowrap"
               >
-                عن المنصة
+                تواصل معنا
               </a>
             </div>
 
@@ -215,7 +220,6 @@ export default function Header() {
               </button>
             </div>
           </div>
-
         </nav>
       </header>
 

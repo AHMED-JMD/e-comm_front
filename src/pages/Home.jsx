@@ -16,6 +16,7 @@ import Spinner from "../components/Spinner";
 import { CategoryIconBadge } from "../utils/categoryIcons";
 import { useCart } from "../context/CartContext";
 import apiClient from "../utils/api";
+import { SudanFlag } from "../components/Logo";
 
 /** Shown when the shop API can't be reached, so an outage never looks like "no data". */
 function LoadErrorCard({ onRetry }) {
@@ -122,14 +123,13 @@ export default function Home() {
                 ✨ تجربة تسوق جديدة كلياً
               </span>
               <h1 className="text-4xl md:text-6xl font-display font-black mb-6 leading-[1.15]">
-                منصة تجارة إلكترونية
                 <span className="block text-transparent bg-clip-text bg-gradient-to-l from-canvas to-pink-200">
-                  آمنة، سريعة، وموثوقة
+                  نجمع لك افضل المتاجر والمنتجات في منصة واحدة
                 </span>
               </h1>
               <p className="text-lg text-white/85 mb-8 max-w-lg">
-                تصل بين البائعين والمشترين في بيئة آمنة. ابدأ البيع أو الشراء
-                اليوم
+                كل ما تحتاجه اقرب اليك, لُوما Luma امان التسوق في السودان{" "}
+                <SudanFlag className="inline-block w-5 h-5" />
               </p>
 
               <form
@@ -161,7 +161,7 @@ export default function Home() {
                   to="/register"
                   className="inline-flex items-center justify-center px-8 py-3.5 bg-white/10 border-2 border-white/40 backdrop-blur-sm text-white font-bold rounded-full hover:bg-white/20 transition-all"
                 >
-                  ابدأ البيع الآن
+                  ابدأ التسوق الآن
                 </Link>
               </div>
             </div>
@@ -181,13 +181,13 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-16 px-4 bg-mesh-soft">
         <div className="max-w-7xl mx-auto">
-          <h2 className="section-title">لماذا اختيار منصتنا؟</h2>
+          <h2 className="section-title"> لُوما Luma ؟</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="card text-center group">
               <div className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-glow group-hover:rotate-6 transition-transform">
                 <FiShield size={34} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">آمن وموثوق</h3>
+              <h3 className="text-xl font-bold mb-3">آمنة و موثوقة</h3>
               <p className="text-gray-600">
                 معاملات آمنة مع حماية كاملة للبيانات الشخصية والمالية
               </p>
@@ -196,7 +196,7 @@ export default function Home() {
               <div className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-glow group-hover:rotate-6 transition-transform">
                 <FiStar size={34} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">تقييمات وثقة</h3>
+              <h3 className="text-xl font-bold mb-3">تقييمات واضحة</h3>
               <p className="text-gray-600">
                 نظام تقييم شفاف يساعدك على اختيار البائعين الموثوقين
               </p>
@@ -205,7 +205,7 @@ export default function Home() {
               <div className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-glow-green group-hover:rotate-6 transition-transform">
                 <FiZap size={34} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold mb-3">سريع وسهل</h3>
+              <h3 className="text-xl font-bold mb-3">سريعة وسهلة</h3>
               <p className="text-gray-600">
                 واجهة بسيطة وسهلة الاستخدام للبيع والشراء بسرعة
               </p>
@@ -318,7 +318,7 @@ export default function Home() {
             مجاناً!
           </p>
           <Link
-            to="/register"
+            to="/contact"
             className="inline-block px-8 py-3.5 bg-white text-purple-700 font-bold rounded-full shadow-glow-lg hover:-translate-y-0.5 transition-all"
           >
             تواصل معنا
