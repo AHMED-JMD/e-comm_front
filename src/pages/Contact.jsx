@@ -38,14 +38,14 @@ const CONTACT_CHANNELS = [
   {
     icon: FiMail,
     label: "البريد الإلكتروني",
-    value: "support@luma-store.com",
-    href: "mailto:support@luma-store.com",
+    value: "support@luma-sd.com",
+    href: "mailto:support@luma-sd.com",
   },
   {
     icon: FiPhone,
     label: "الهاتف / واتساب",
-    value: "+249 900 000 000",
-    href: "tel:+249900000000",
+    value: "902192339 249+",
+    href: "tel:+249902192339",
   },
   {
     icon: FiMapPin,
@@ -257,16 +257,17 @@ export default function Contact() {
                 هل أنت متجر؟
               </h3>
               <p className="text-sm text-white/85 leading-relaxed mb-4">
-                أنشئ حسابك وابدأ البيع مجاناً، أو راسلنا لنساعدك في الإعداد.
+                قريبا أنشئ حسابك وابدأ البيع مجاناً، حاليا راسلنا لنساعدك في
+                الإعداد.
               </p>
-              <Link
+              {/* <Link
                 to="/register"
                 disabled
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-purple-700 font-bold rounded-full text-sm hover:-translate-y-0.5 transition-all"
               >
                 إنشاء حساب متجر
                 <FiArrowLeft />
-              </Link>
+              </Link> */}
             </div>
           </aside>
 

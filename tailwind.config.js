@@ -118,7 +118,7 @@ export default {
         ],
         // Logo lockup only — the faces the Meroë logo was drawn in.
         logo: ["Marcellus", "Georgia", "serif"],
-        "logo-ar": ["Aref Ruqaa", "Tajawal", "serif"],
+        "logo-ar": ["Amiri", "Tajawal", "serif"],
       },
       borderRadius: {
         "4xl": "1.75rem",

@@ -64,6 +64,8 @@ export default function Logo({
   className = "",
 }) {
   const latinSize = Math.round(height * 0.75);
+  // Amiri draws much larger on the em than Marcellus, so the Arabic still gets
+  // a smaller size than the Latin even though it is set to carry more weight.
   const arabicSize = Math.round(height * 0.72);
   const flagWidth = Math.max(14, Math.round(height * 0.9));
   const textColor = tone === "onDark" ? "text-canvas" : "text-ink";
@@ -74,7 +76,8 @@ export default function Logo({
       <LogoMark height={height} tone={tone} />
 
       <span className="inline-flex flex-col items-center gap-1">
-        <span className="inline-flex items-center gap-2.5">
+        {/* Baseline — not centre — so LUMA and لُوما share one seat line. */}
+        <span className="inline-flex items-baseline gap-2.5">
           {showLatin && (
             <span
               className={`font-logo leading-none ${textColor}`}
@@ -91,7 +94,7 @@ export default function Logo({
           {showArabic && (
             <span
               dir="rtl"
-              className={`font-logo-ar leading-none ${arabicColor}`}
+              className={`font-logo-ar font-bold leading-none ${arabicColor}`}
               style={{ fontSize: arabicSize }}
             >
               لُوما

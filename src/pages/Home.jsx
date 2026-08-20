@@ -314,8 +314,7 @@ export default function Home() {
             هل أنت متجر؟
           </h2>
           <p className="text-lg text-white/85 mb-8 max-w-2xl mx-auto">
-            انضم إلى آلاف التجار الذين يبيعون منتجاتهم على منصتنا. ابدأ الآن
-            مجاناً!
+            انضم إلى التجار الذين يبيعون منتجاتهم على منصتنا. ابدأ الآن مجاناً!
           </p>
           <Link
             to="/contact"
