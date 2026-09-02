@@ -38,8 +38,8 @@ const CONTACT_CHANNELS = [
   {
     icon: FiMail,
     label: "البريد الإلكتروني",
-    value: "support@luma-sd.com",
-    href: "mailto:support@luma-sd.com",
+    value: "info@luma-sd.com",
+    href: "mailto:info@luma-sd.com",
   },
   {
     icon: FiPhone,

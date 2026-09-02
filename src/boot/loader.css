@@ -1,0 +1,333 @@
+/**
+ * Pre-boot page loader — inlined into the <head> of index.html and admin.html by
+ * `brandLoader()` in vite.config.js, so the veil paints on the first frame,
+ * before the React bundle is even fetched.
+ *
+ * The beat: the Sudan flag's bands rise into the Luma pyramids, the flag badge
+ * under the wordmark unfurls its green wedge, both hold, then drain and repeat.
+ *
+ * The bands live inside each pyramid rather than spanning one shared sheet: the
+ * flanking pyramids are only 0.72 the height of the centre, so a shared sheet
+ * would leave them with no red at all. Each pyramid therefore carries a whole
+ * flag — bands plus the green hoist wedge — and so does the badge below.
+ *
+ * Everything is scoped under #luma-boot and written in raw CSS: Tailwind has not
+ * loaded yet at this point in the page's life.
+ */
+
+#luma-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: grid;
+  place-items: center;
+  background-color: #faf8f2;
+  background-image:
+    radial-gradient(at 12% 14%, rgba(120, 139, 69, 0.14) 0, transparent 46%),
+    radial-gradient(at 88% 18%, rgba(176, 138, 82, 0.13) 0, transparent 46%),
+    radial-gradient(at 50% 92%, rgba(232, 221, 200, 0.5) 0, transparent 48%);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 420ms ease, visibility 420ms;
+  /* Failsafe: if the bundle never boots, don't trap the page behind the veil. */
+  animation: luma-boot-failsafe 1ms linear 12s forwards;
+}
+
+#luma-boot.is-done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes luma-boot-failsafe {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+#luma-boot .luma-boot__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+#luma-boot .luma-boot__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  animation: luma-boot-in 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---- the mark ---------------------------------------------------------- */
+
+#luma-boot .luma-boot__mark {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 64px;
+  filter: drop-shadow(0 10px 18px rgba(74, 59, 42, 0.18));
+}
+
+#luma-boot .luma-boot__pyr {
+  position: relative;
+  overflow: hidden;
+  -webkit-clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+/* Proportions and colours from the brand lockup: the centre pyramid is the
+   unit, the flanking ones 0.72 its height and 0.43 its width. Sitting in brand
+   colour underneath means the mark reads as the Luma logo first, and the flag
+   washes up through it. */
+#luma-boot .luma-boot__pyr--side {
+  width: 28px;
+  height: 46px;
+  background: #788b45;
+}
+
+#luma-boot .luma-boot__pyr--centre {
+  width: 36px;
+  height: 64px;
+  background: #4a3b2a;
+}
+
+/* Static sheen so the pyramids read as stone rather than flat cut-outs. */
+#luma-boot .luma-boot__pyr::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.32) 0%,
+    rgba(255, 255, 255, 0) 46%,
+    rgba(74, 59, 42, 0.18) 100%
+  );
+  pointer-events: none;
+}
+
+#luma-boot .luma-boot__flag {
+  position: absolute;
+  inset: 0;
+  /* The wedge is clipped inside this box, so it rides up with the bands as one
+     flag and lands aligned to the pyramid at rest. */
+  background: linear-gradient(
+    to bottom,
+    #d21034 0 33.34%,
+    #ffffff 33.34% 66.67%,
+    #111111 66.67% 100%
+  );
+  transform: translate(0, 100%);
+  will-change: transform;
+  /* All three move as one — a stagger here just reads as three loose banners. */
+  animation: luma-boot-rise 2.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/*
+ * The green hoist wedge. Its vertical side is the flag's hoist; here that maps
+ * onto the pyramid's own left slope — `34% 32%` sits exactly on the line from
+ * the base corner (0% 100%) to the apex (50% 0%) — so the wedge grows out of the
+ * stone edge rather than floating inside it, and the red apex stays clean.
+ */
+#luma-boot .luma-boot__flag > i {
+  position: absolute;
+  inset: 0;
+  background: #007229;
+  -webkit-clip-path: polygon(0% 100%, 34% 32%, 48% 70%);
+  clip-path: polygon(0% 100%, 34% 32%, 48% 70%);
+}
+
+/* Rise into the monument, flutter twice while it is up, then drain away. */
+@keyframes luma-boot-rise {
+  0%,
+  6% {
+    transform: translate(0, 100%);
+  }
+  36% {
+    transform: translate(0, 0);
+  }
+  48% {
+    transform: translate(2px, -1px);
+  }
+  60% {
+    transform: translate(-2px, 1px);
+  }
+  72% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(0, 100%);
+  }
+}
+
+/* ---- wordmark + flag badge, the lockup from the brand sheet ------------- */
+
+#luma-boot .luma-boot__lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  animation: luma-boot-word 700ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both;
+}
+
+#luma-boot .luma-boot__word {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+#luma-boot .luma-boot__latin {
+  font-family: "Marcellus", Georgia, serif;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  color: #4a3b2a;
+}
+
+#luma-boot .luma-boot__arabic {
+  font-family: "Amiri", "Tajawal", serif;
+  font-weight: 700;
+  font-size: 29px;
+  line-height: 1;
+  color: #4a3b2a;
+}
+
+#luma-boot .luma-boot__badge {
+  position: relative;
+  width: 36px;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(74, 59, 42, 0.28);
+  background: linear-gradient(
+    to bottom,
+    #d21034 0 33.34%,
+    #ffffff 33.34% 66.67%,
+    #111111 66.67% 100%
+  );
+}
+
+/* The green hoist wedge, unfurling from the hoist once the bands are up. */
+#luma-boot .luma-boot__badge > i {
+  position: absolute;
+  inset: 0;
+  background: #007229;
+  -webkit-clip-path: polygon(0 0, 38.9% 50%, 0 100%);
+  clip-path: polygon(0 0, 38.9% 50%, 0 100%);
+  transform: translateX(-110%);
+  animation: luma-boot-wedge 2.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes luma-boot-wedge {
+  0%,
+  18% {
+    transform: translateX(-110%);
+  }
+  44%,
+  72% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-110%);
+  }
+}
+
+/* ---- progress rail, sweeping right-to-left to match the RTL page -------- */
+
+#luma-boot .luma-boot__rail {
+  position: relative;
+  width: 148px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(74, 59, 42, 0.1);
+}
+
+#luma-boot .luma-boot__rail > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 46%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(120, 139, 69, 0) 0%, #788b45 45%, #4a3b2a 100%);
+  animation: luma-boot-rail 1.7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes luma-boot-rail {
+  0% {
+    transform: translateX(230%);
+  }
+  100% {
+    transform: translateX(-115%);
+  }
+}
+
+#luma-boot .luma-boot__caption {
+  margin: 0;
+  font-family: "Tajawal", system-ui, -apple-system, sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: rgba(74, 59, 42, 0.55);
+  animation: luma-boot-word 700ms cubic-bezier(0.22, 1, 0.36, 1) 360ms both;
+}
+
+@keyframes luma-boot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes luma-boot-word {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced motion: the flag sits raised and only the rail breathes. */
+@media (prefers-reduced-motion: reduce) {
+  #luma-boot .luma-boot__stage,
+  #luma-boot .luma-boot__lockup,
+  #luma-boot .luma-boot__caption {
+    animation: none;
+  }
+
+  #luma-boot .luma-boot__flag,
+  #luma-boot .luma-boot__badge > i {
+    animation: none;
+    transform: none;
+  }
+
+  #luma-boot .luma-boot__rail > span {
+    width: 100%;
+    transform: none;
+    animation: luma-boot-breathe 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes luma-boot-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}

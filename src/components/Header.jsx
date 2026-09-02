@@ -6,6 +6,7 @@ import {
   FiExternalLink,
   FiHome,
   FiGrid,
+  FiPhone,
   FiPackage,
   FiUser,
   FiInfo,
@@ -318,7 +319,11 @@ export default function Header() {
                   Icon: FiExternalLink,
                 })}
 
-              {drawerLink({ href: "#", label: "عن المنصة", Icon: FiInfo })}
+              {drawerLink({
+                href: "/contact",
+                label: "تواصل معنا",
+                Icon: FiPhone,
+              })}
             </nav>
 
             {/* Footer */}

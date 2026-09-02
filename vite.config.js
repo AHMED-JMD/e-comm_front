@@ -1,4 +1,5 @@
-import { resolve } from "path";
+import { readFileSync } from "fs";
+import { basename, resolve } from "path";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -38,12 +39,57 @@ function adminSubdomainRouter(adminSubdomain) {
   };
 }
 
+/**
+ * Inlines the pre-boot loader (`src/boot/loader.{css,html}`) into both entry
+ * points, so the branded veil paints on the first frame instead of waiting for
+ * the React bundle. Kept as one shared partial rather than copy-pasted markup:
+ * `index.html` and `admin.html` only differ by the caption under the wordmark.
+ */
+function brandLoader(captions) {
+  const stylePath = resolve(__dirname, "src/boot/loader.css");
+  const markupPath = resolve(__dirname, "src/boot/loader.html");
+
+  return {
+    name: "luma-brand-loader",
+    transformIndexHtml: {
+      order: "pre",
+      handler(html, ctx) {
+        const entry = basename(ctx.filename || ctx.path || "");
+        const caption = captions[entry];
+        if (!caption) return html;
+
+        const style = `<style data-luma-boot>\n${readFileSync(stylePath, "utf8")}</style>`;
+        const markup = readFileSync(markupPath, "utf8").replace(
+          "__LOADER_CAPTION__",
+          caption,
+        );
+
+        return html
+          .replace("</head>", `${style}\n  </head>`)
+          .replace(/(<body[^>]*>)/i, `$1\n${markup}`);
+      },
+    },
+    handleHotUpdate({ file, server }) {
+      if (file === stylePath || file === markupPath) {
+        server.ws.send({ type: "full-reload" });
+      }
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const adminSubdomain = env.VITE_ADMIN_SUBDOMAIN || "admin";
 
   return {
-    plugins: [react(), adminSubdomainRouter(adminSubdomain)],
+    plugins: [
+      react(),
+      adminSubdomainRouter(adminSubdomain),
+      brandLoader({
+        "index.html": "منصة لوما الإلكترونية",
+        "admin.html": "لوحة تحكم لُوما",
+      }),
+    ],
     server: {
       port: 3000,
       strictPort: false,

@@ -1,0 +1,34 @@
+<!--
+  Pre-boot page loader markup. Injected right after <body> in index.html and
+  admin.html by `brandLoader()` in vite.config.js — kept in one partial so the
+  two entry points cannot drift apart. Styles live in `loader.css`.
+-->
+<div id="luma-boot" class="luma-boot" role="status" aria-live="polite">
+  <span class="luma-boot__sr">جاري تحميل منصة لُوما…</span>
+
+  <div class="luma-boot__stage" aria-hidden="true">
+    <div class="luma-boot__mark">
+      <span class="luma-boot__pyr luma-boot__pyr--side">
+        <span class="luma-boot__flag"><i></i></span>
+      </span>
+      <span class="luma-boot__pyr luma-boot__pyr--centre">
+        <span class="luma-boot__flag"><i></i></span>
+      </span>
+      <span class="luma-boot__pyr luma-boot__pyr--side">
+        <span class="luma-boot__flag"><i></i></span>
+      </span>
+    </div>
+
+    <div class="luma-boot__lockup">
+      <div class="luma-boot__word">
+        <span class="luma-boot__latin">LUMA</span>
+        <span class="luma-boot__arabic">لُوما</span>
+      </div>
+      <div class="luma-boot__badge"><i></i></div>
+    </div>
+
+    <div class="luma-boot__rail"><span></span></div>
+
+    <p class="luma-boot__caption">__LOADER_CAPTION__</p>
+  </div>
+</div>
